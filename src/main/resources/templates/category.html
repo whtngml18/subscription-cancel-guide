@@ -10,13 +10,21 @@
 
 <h1 th:text="${category.name}">카테고리 이름</h1>
 
-<p th:if="${subscriptions.isEmpty()}">아직 등록된 서비스가 없어요.</p>
+<p th:if="${page.isEmpty()}">아직 등록된 서비스가 없어요.</p>
 
-<ul th:unless="${subscriptions.isEmpty()}">
-    <li th:each="subscription : ${subscriptions}">
+<ul th:unless="${page.isEmpty()}">
+    <li th:each="subscription : ${page.content}">
         <a th:href="@{/guide/{slug}(slug=${subscription.slug})}"
            th:text="${subscription.name}">서비스 이름</a>
     </li>
 </ul>
+
+<nav th:if="${page.totalPages > 1}">
+    <a th:if="${page.hasPrevious()}"
+       th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number - 1}, size=${page.size})}">← 이전</a>
+    <span th:text="${page.number + 1} + ' / ' + ${page.totalPages} + ' 페이지'">1 / 1 페이지</span>
+    <a th:if="${page.hasNext()}"
+       th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number + 1}, size=${page.size})}">다음 →</a>
+</nav>
 </body>
 </html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'\'' + ${keyword} + '\' 검색 결과 | 구독 해지 가이드'">검색 결과 | 구독 해지 가이드</title>
+</head>
+<body>
+<a th:href="@{/}">← 처음으로</a>
+
+<form th:action="@{/search}" method="get">
+    <input type="text" name="q" th:value="${keyword}" placeholder="서비스 이름을 입력하세요">
+    <button type="submit">검색</button>
+</form>
+
+<h1 th:text="'\'' + ${keyword} + '\' 검색 결과'">검색 결과</h1>
+
+<div th:if="${page.isEmpty()}">
+    <p th:text="'아직 \'' + ${keyword} + '\'의 해지 방법이 없어요.'">결과가 없어요.</p>
+    <a th:href="@{/submit}">해지 방법 제보하기</a>
+</div>
+
+<ul th:unless="${page.isEmpty()}">
+    <li th:each="subscription : ${page.content}">
+        <a th:href="@{/guide/{slug}(slug=${subscription.slug})}"
+           th:text="${subscription.name}">서비스 이름</a>
+    </li>
+</ul>
+
+<nav th:if="${page.totalPages > 1}">
+    <a th:if="${page.hasPrevious()}"
+       th:href="@{/search(q=${keyword}, page=${page.number - 1}, size=${page.size})}">← 이전</a>
+    <span th:text="${page.number + 1} + ' / ' + ${page.totalPages} + ' 페이지'">1 / 1 페이지</span>
+    <a th:if="${page.hasNext()}"
+       th:href="@{/search(q=${keyword}, page=${page.number + 1}, size=${page.size})}">다음 →</a>
+</nav>
+</body>
+</html>
