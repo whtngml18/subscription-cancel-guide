@@ -12,5 +12,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     Optional<Subscription> findBySlug(String slug);
 
     List<Subscription> findAllByCategory(Category category);
+
+    List<Subscription> findByNameContainingIgnoreCaseOrSlugContainingIgnoreCase(String name, String slug);
 }
 
