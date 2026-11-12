@@ -15,4 +15,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     Page<Subscription> findAllByCategory(Category category, Pageable pageable);
 
     Page<Subscription> findByNameContainingIgnoreCaseOrSlugContainingIgnoreCase(String name, String slug, Pageable pageable);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(String slug, Long id);
 }

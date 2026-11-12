@@ -42,6 +42,13 @@ public class GuideStep {
         this.position = position;
         this.description = description;
     }
+
+    public void update(int stepOrder, String screenName, String targetLabel,
+                       String position, String description) {
+        this.stepOrder = stepOrder;
+        this.screenName = screenName;
+        this.targetLabel = targetLabel;
+        this.position = position;
+        this.description = description;
+    }
 }
-
-
