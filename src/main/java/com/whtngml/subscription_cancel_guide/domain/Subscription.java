@@ -43,4 +43,14 @@ public class Subscription {
         this.refundInfo = refundInfo;
         this.verifiedAt = verifiedAt;
     }
+
+    public void update(Category category, String name, String slug, String brandColor,
+                       String refundInfo, LocalDate verifiedAt) {
+        this.category = category;
+        this.name = name;
+        this.slug = slug;
+        this.brandColor = brandColor;
+        this.refundInfo = refundInfo;
+        this.verifiedAt = verifiedAt;
+    }
 }

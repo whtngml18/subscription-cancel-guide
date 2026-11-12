@@ -13,12 +13,17 @@
     <button type="submit">로그아웃</button>
 </form>
 
+<p th:if="${message}" th:text="${message}">알림</p>
+
+<a th:href="@{/admin/guides/new}">+ 새 서비스 등록</a>
+
 <p th:if="${subscriptions.isEmpty()}">등록된 서비스가 없어요.</p>
 
 <ul th:unless="${subscriptions.isEmpty()}">
     <li th:each="subscription : ${subscriptions}">
         <span th:text="${subscription.name}">서비스 이름</span>
         (<span th:text="${subscription.category.name}">카테고리</span>)
+        <a th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">수정</a>
         <a th:href="@{/guide/{slug}(slug=${subscription.slug})}">사이트에서 보기</a>
     </li>
 </ul>
