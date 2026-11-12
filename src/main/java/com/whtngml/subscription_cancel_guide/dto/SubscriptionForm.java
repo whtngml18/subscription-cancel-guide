@@ -24,7 +24,7 @@ public class SubscriptionForm {
 
     @NotBlank(message = "slug를 입력해 주세요.")
     @Size(max = 50, message = "slug는 50자까지 쓸 수 있어요.")
-    @Pattern(regexp = "^[a-z0-9-]+$", message = "slug는 영어 소문자, 숫자, -만 쓸 수 있어요.")
+    @Pattern(regexp = "^[a-z0-9-]*$", message = "slug는 영어 소문자, 숫자, -만 쓸 수 있어요.")
     private String slug;
 
     @Pattern(regexp = "^(#[0-9A-Fa-f]{6})?$", message = "브랜드 색은 #E50914처럼 써 주세요.")

@@ -50,6 +50,7 @@ public class AdminGuideController {
                                      BindingResult bindingResult,
                                      Model model,
                                      RedirectAttributes redirectAttributes) {
+        checkCategory(form, bindingResult);
         checkSlug(form, null, bindingResult);
         if (bindingResult.hasErrors()) {
             return showSubscriptionForm(null, model);
@@ -76,6 +77,7 @@ public class AdminGuideController {
                                      Model model,
                                      RedirectAttributes redirectAttributes) {
         Subscription subscription = guideAdminService.getSubscription(id);
+        checkCategory(form, bindingResult);
         checkSlug(form, id, bindingResult);
         if (bindingResult.hasErrors()) {
             return showSubscriptionForm(subscription, model);
@@ -178,6 +180,12 @@ public class AdminGuideController {
         model.addAttribute("subscription", subscription);
         model.addAttribute("stepId", stepId);
         return "admin/step-form";
+    }
+
+    private void checkCategory(SubscriptionForm form, BindingResult bindingResult) {
+        if (!bindingResult.hasFieldErrors("categoryId") && !categoryRepository.existsById(form.getCategoryId())) {
+            bindingResult.rejectValue("categoryId", "notFound", "없는 카테고리예요. 다시 골라 주세요.");
+        }
     }
 
     private void checkSlug(SubscriptionForm form, Long excludeId, BindingResult bindingResult) {
