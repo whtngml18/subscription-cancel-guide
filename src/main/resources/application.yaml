@@ -3,6 +3,7 @@ spring:
     name: subscription-cancel-guide
   jpa:
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
@@ -13,3 +14,8 @@ spring:
   h2:
     console:
       enabled: true
+
+  sql:
+    init:
+      encoding: UTF-8
+

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${category.name} + ' 구독 해지 방법 | 구독 해지 가이드'">카테고리 | 구독 해지 가이드</title>
+</head>
+<body>
+<a th:href="@{/}">← 처음으로</a>
+
+<h1 th:text="${category.name}">카테고리 이름</h1>
+
+<p th:if="${subscriptions.isEmpty()}">아직 등록된 서비스가 없어요.</p>
+
+<ul th:unless="${subscriptions.isEmpty()}">
+    <li th:each="subscription : ${subscriptions}">
+        <a th:href="@{/guide/{slug}(slug=${subscription.slug})}"
+           th:text="${subscription.name}">서비스 이름</a>
+    </li>
+</ul>
+</body>
+</html>
