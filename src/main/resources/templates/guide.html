@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${subscription.name} + ' 해지 방법 | 구독 해지 가이드'">해지 방법 | 구독 해지 가이드</title>
+</head>
+<body>
+<a th:href="@{/category/{slug}(slug=${subscription.category.slug})}"
+   th:text="'← ' + ${subscription.category.name}">← 카테고리</a>
+
+<h1 th:text="${subscription.name} + ' 해지 방법'">서비스 해지 방법</h1>
+
+<p th:if="${subscription.verifiedAt != null}"
+   th:text="'마지막 확인일: ' + ${#temporals.format(subscription.verifiedAt, 'yyyy년 M월 d일')}">마지막 확인일</p>
+
+<h2>해지 단계</h2>
+
+<p th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
+
+<ol th:unless="${steps.isEmpty()}">
+    <li th:each="step : ${steps}">
+        <strong>
+            [<span th:text="${step.screenName}">화면</span>]
+            <span th:text="${step.targetLabel}">누를 버튼</span>
+        </strong>
+        <p th:text="${step.description}">설명</p>
+    </li>
+</ol>
+
+<h2>환불 안내</h2>
+<p th:text="${subscription.refundInfo} ?: '등록된 환불 정보가 없어요.'">환불 정보</p>
+</body>
+</html>
