@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>구독 해지 가이드</title>
+</head>
+<body>
+<h1>구독 해지 가이드</h1>
+<p>구독 해지 방법을 단계별 그림으로 알려드려요.</p>
+
+<h2>카테고리</h2>
+<ul>
+    <li th:each="category : ${categories}">
+        <a th:href="@{/category/{slug}(slug=${category.slug})}"
+           th:text="${category.name}">카테고리 이름</a>
+    </li>
+</ul>
+</body>
+</html>
