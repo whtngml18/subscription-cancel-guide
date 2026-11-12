@@ -81,7 +81,7 @@
 | 정부 구독 통합 조회 (2026.9~) | 금융 결제 내역으로 구독 조회 | 해지 방법은 안내하지 않음 | 해지 경로 안내에 집중 |
 | 개인 블로그 글 | 검색에 잘 걸림 | 글마다 형식이 다르고 금방 오래됨 | 한곳에 모음, 피드백으로 최신 유지 |
 
-벤치마크 대상은 JustDeleteMe다. 서비스 목록, 난이도 색상 표시, 검색 구조를 참고한다.
+벤치마크 대상은 JustDeleteMe다. 서비스 목록과 검색 구조를 참고하고, 난이도 색상 표시는 향후 확장으로 둔다.
 
 ## 6. 주요 기능
 
@@ -89,7 +89,7 @@
 
 | 구분 | 기능 | 설명 |
 | --- | --- | --- |
-| 필수 | 서비스 목록 | 카테고리별(OTT, 음악, 쇼핑 멤버십 등) 목록, 해지 난이도 색상 표시 |
+| 필수 | 서비스 목록 | 카테고리별(OTT, 음악, 쇼핑 멤버십 등) 목록 |
 | 필수 | 검색 | 서비스명으로 검색, 결과가 없으면 "해지 방법 제보하기"로 연결 |
 | 필수 | 해지 가이드 상세 | 단계별 설명, 환불 조건, 고객센터 정보, 마지막 확인일 |
 | 필수 | 관리자 기능 | 관리자 로그인, 서비스와 가이드 등록·수정·삭제, 제보 승인·반려 |
@@ -97,6 +97,7 @@
 | 핵심 | 글로 제보 → AI 단계 변환 | 사용자가 글로 쓴 해지 방법을 AI가 단계 JSON으로 바꾸고, 미리보기 그림을 보여줌 |
 | 핵심 | 검증 표시와 피드백 | "사용자 제보·AI 변환" 배지, "이 방법이 맞았어요 / 달라요" 버튼 |
 | 필수 | 반응형, SEO, PWA | Bootstrap 반응형, 페이지별 meta·Open Graph·sitemap.xml, manifest와 서비스 워커(오프라인 페이지) |
+| 향후 | 해지 난이도 색상 표시 | 서비스별 해지 난이도(쉬움·보통·어려움)를 색상 배지로 표시 |
 | 향후 | 캡처 업로드 | 실제 화면 캡처 위에 누를 곳 표시, 개인정보 가리기, AI가 캡처를 보고 설명 자동 작성 |
 | 향후 | AI 이미지 생성 | "실제 화면과 다를 수 있어요" 표시를 붙인 예시 이미지 |
 | 향후 | 회원가입 + 내 구독 관리 | 내 구독 등록, 월 총액, 결제일 알림 |
@@ -122,7 +123,7 @@ flowchart LR
 | 구분 | 화면 | URL | 주요 내용 |
 | --- | --- | --- | --- |
 | 사용자 | 메인 | `/` | 검색창, 카테고리, 인기 해지 가이드 |
-| 사용자 | 카테고리 목록 | `/category/{name}` | 서비스 카드, 난이도 색상, 페이지 나누기 |
+| 사용자 | 카테고리 목록 | `/category/{name}` | 서비스 카드, 페이지 나누기 |
 | 사용자 | 검색 결과 | `/search?q=` | 검색 결과, 없으면 제보 버튼 |
 | 사용자 | 해지 가이드 상세 | `/guide/{slug}` | 단계별 화면 그림, 환불 조건, 검증 배지, 피드백 버튼 |
 | 사용자 | 해지 방법 제보 | `/submit` | 서비스명과 방법 글 입력 → AI 변환 → 미리보기 → 제출 |
@@ -155,7 +156,7 @@ Spring Boot와 Thymeleaf로 서버에서 HTML을 완성해 보내므로, 검색�
 | 테이블 | 주요 컬럼 | 관계 |
 | --- | --- | --- |
 | category | id, name, slug | 1 : N service |
-| service | id, category_id, name, slug, brand_color, difficulty, refund_info, verified_at | 1 : N guide_step |
+| service | id, category_id, name, slug, brand_color, refund_info, verified_at | 1 : N guide_step |
 | guide_step | id, service_id, step_order, screen_name, target_label, position, description | service에 속함 |
 | submission | id, service_name, raw_text, ai_steps_json, status, created_at | 승인되면 service + guide_step으로 변환 |
 | feedback | id, service_id, helpful, created_at | service에 속함 |
