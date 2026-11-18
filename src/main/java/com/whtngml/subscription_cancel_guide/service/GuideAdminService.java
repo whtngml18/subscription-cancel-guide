@@ -2,12 +2,14 @@ package com.whtngml.subscription_cancel_guide.service;
 
 import com.whtngml.subscription_cancel_guide.domain.Category;
 import com.whtngml.subscription_cancel_guide.domain.GuideStep;
+import com.whtngml.subscription_cancel_guide.domain.Submission;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
 import com.whtngml.subscription_cancel_guide.repository.FeedbackRepository;
 import com.whtngml.subscription_cancel_guide.repository.GuideStepRepository;
+import com.whtngml.subscription_cancel_guide.repository.SubmissionRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ public class GuideAdminService {
     private final SubscriptionRepository subscriptionRepository;
     private final GuideStepRepository guideStepRepository;
     private final FeedbackRepository feedbackRepository;
+    private final SubmissionRepository submissionRepository;
 
     // ---------- 서비스 ----------
 
@@ -72,6 +75,8 @@ public class GuideAdminService {
         Subscription subscription = getSubscription(id);
         guideStepRepository.deleteAllBySubscription(subscription);
         feedbackRepository.deleteAllBySubscription(subscription);
+        submissionRepository.findAllBySubscriptionOrderByCreatedAtDesc(subscription)
+                .forEach(Submission::unlink);
         subscriptionRepository.delete(subscription);
     }
 

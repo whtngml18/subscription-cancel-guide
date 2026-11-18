@@ -60,6 +60,15 @@
 </form>
 
 <th:block th:if="${subscription != null}">
+    <th:block th:unless="${submissions.isEmpty()}">
+        <h2>제보 원문</h2>
+        <p>사용자가 보낸 글이에요. 보면서 해지 단계를 입력하세요.</p>
+        <blockquote th:each="submission : ${submissions}">
+            <p style="white-space: pre-line" th:text="${submission.rawText}">제보 글</p>
+            <small th:text="${#temporals.format(submission.createdAt, 'yyyy년 M월 d일')} + ' 제보'">제보일</small>
+        </blockquote>
+    </th:block>
+
     <h2>해지 단계</h2>
 
     <a th:href="@{/admin/guides/{id}/steps/new(id=${subscription.id})}">+ 단계 추가</a>

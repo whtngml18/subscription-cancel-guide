@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>제보 검토 | 구독 해지 가이드</title>
+</head>
+<body>
+<a th:href="@{/admin/guides}">← 가이드 관리</a>
+
+<h1>제보 검토</h1>
+
+<p th:if="${message}" th:text="${message}">알림</p>
+
+<p th:if="${page.isEmpty()}">검토할 제보가 없어요.</p>
+
+<ul th:unless="${page.isEmpty()}">
+    <li th:each="submission : ${page.content}">
+        <a th:href="@{/admin/submissions/{id}(id=${submission.id})}"
+           th:text="${submission.serviceName}">서비스 이름</a>
+        <span th:text="${#temporals.format(submission.createdAt, 'M월 d일 HH:mm')}">제보 시각</span>
+    </li>
+</ul>
+
+<nav th:if="${page.totalPages > 1}">
+    <a th:if="${page.hasPrevious()}" th:href="@{/admin/submissions(page=${page.number - 1})}">← 이전</a>
+    <span th:text="${page.number + 1} + ' / ' + ${page.totalPages} + ' 페이지'">1 / 1 페이지</span>
+    <a th:if="${page.hasNext()}" th:href="@{/admin/submissions(page=${page.number + 1})}">다음 →</a>
+</nav>
+</body>
+</html>
