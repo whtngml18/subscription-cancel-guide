@@ -8,6 +8,7 @@ import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
 import com.whtngml.subscription_cancel_guide.service.FeedbackService;
 import com.whtngml.subscription_cancel_guide.service.GuideAdminService;
+import com.whtngml.subscription_cancel_guide.service.SubmissionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -30,6 +31,7 @@ public class AdminGuideController {
     private final CategoryRepository categoryRepository;
     private final GuideAdminService guideAdminService;
     private final FeedbackService feedbackService;
+    private final SubmissionService submissionService;
 
     // ---------- 서비스 목록 ----------
 
@@ -37,6 +39,7 @@ public class AdminGuideController {
     public String list(Model model) {
         model.addAttribute("subscriptions", subscriptionRepository.findAll(Sort.by("name")));
         model.addAttribute("feedbackCounts", feedbackService.countAllBySubscription());
+        model.addAttribute("pendingCount", submissionService.countPending());
         return "admin/guides";
     }
 
@@ -175,6 +178,7 @@ public class AdminGuideController {
         model.addAttribute("categories", categoryRepository.findAll(Sort.by("id")));
         if (subscription != null) {
             model.addAttribute("steps", guideAdminService.getSteps(subscription));
+            model.addAttribute("submissions", submissionService.getApprovedSubmissions(subscription));
         }
         return "admin/subscription-form";
     }

@@ -30,10 +30,41 @@ public class Submission {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    // 승인하면 연결되는 서비스 (검토 대기·반려일 때는 null)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subscription_id")
+    private Subscription subscription;
+
     public Submission(String serviceName, String rawText) {
         this.serviceName = serviceName;
         this.rawText = rawText;
         this.status = SubmissionStatus.PENDING;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public boolean isPending() {
+        return status == SubmissionStatus.PENDING;
+    }
+
+    public void approve(Subscription subscription) {
+        checkPending();
+        this.status = SubmissionStatus.APPROVED;
+        this.subscription = subscription;
+    }
+
+    public void reject() {
+        checkPending();
+        this.status = SubmissionStatus.REJECTED;
+    }
+
+    // 서비스가 삭제될 때 제보는 남기고 연결만 끊는다
+    public void unlink() {
+        this.subscription = null;
+    }
+
+    private void checkPending() {
+        if (!isPending()) {
+            throw new IllegalStateException("이미 처리한 제보예요.");
+        }
     }
 }
