@@ -19,6 +19,18 @@
 
 <p th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
 
+<ol th:unless="${steps.isEmpty()}">
+    <li th:each="step : ${steps}">
+        <strong>
+            [<span th:text="${step.screenName}">화면</span>]
+            <span th:text="${step.targetLabel}">누를 버튼</span>
+        </strong>
+        <p th:text="${step.description}">설명</p>
+    </li>
+</ol>
+
+<h3 th:unless="${steps.isEmpty()}">화면으로 보기</h3>
+
 <ol class="phone-list" th:unless="${steps.isEmpty()}">
     <li th:each="step : ${steps}">
         <figure th:replace="~{fragments/phone :: phone(${step}, ${subscription.brandColor})}"></figure>
