@@ -57,4 +57,8 @@ public class Subscription {
         this.refundInfo = refundInfo;
         this.verifiedAt = verifiedAt;
     }
+
+    public void markAsUserSubmission() {
+        this.source = GuideSource.USER_SUBMISSION;
+    }
 }

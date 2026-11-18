@@ -16,6 +16,7 @@
 <p th:if="${message}" th:text="${message}">알림</p>
 
 <a th:href="@{/admin/guides/new}">+ 새 서비스 등록</a>
+<a th:href="@{/admin/submissions}" th:text="'제보 검토 (' + ${pendingCount} + '건)'">제보 검토 (0건)</a>
 
 <p th:if="${subscriptions.isEmpty()}">등록된 서비스가 없어요.</p>
 
