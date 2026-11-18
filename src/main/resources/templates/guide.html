@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${subscription.name} + ' 해지 방법 | 구독 해지 가이드'">해지 방법 | 구독 해지 가이드</title>
+    <link rel="stylesheet" th:href="@{/css/phone.css}">
 </head>
 <body>
 <a th:href="@{/category/{slug}(slug=${subscription.category.slug})}"
@@ -18,13 +19,9 @@
 
 <p th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
 
-<ol th:unless="${steps.isEmpty()}">
+<ol class="phone-list" th:unless="${steps.isEmpty()}">
     <li th:each="step : ${steps}">
-        <strong>
-            [<span th:text="${step.screenName}">화면</span>]
-            <span th:text="${step.targetLabel}">누를 버튼</span>
-        </strong>
-        <p th:text="${step.description}">설명</p>
+        <figure th:replace="~{fragments/phone :: phone(${step}, ${subscription.brandColor})}"></figure>
     </li>
 </ol>
 
