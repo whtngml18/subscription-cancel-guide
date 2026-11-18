@@ -6,6 +6,7 @@ import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
+import com.whtngml.subscription_cancel_guide.service.FeedbackService;
 import com.whtngml.subscription_cancel_guide.service.GuideAdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +29,14 @@ public class AdminGuideController {
     private final SubscriptionRepository subscriptionRepository;
     private final CategoryRepository categoryRepository;
     private final GuideAdminService guideAdminService;
+    private final FeedbackService feedbackService;
 
     // ---------- 서비스 목록 ----------
 
     @GetMapping
     public String list(Model model) {
         model.addAttribute("subscriptions", subscriptionRepository.findAll(Sort.by("name")));
+        model.addAttribute("feedbackCounts", feedbackService.countAllBySubscription());
         return "admin/guides";
     }
 

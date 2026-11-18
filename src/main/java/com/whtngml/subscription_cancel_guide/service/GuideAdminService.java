@@ -6,6 +6,7 @@ import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
+import com.whtngml.subscription_cancel_guide.repository.FeedbackRepository;
 import com.whtngml.subscription_cancel_guide.repository.GuideStepRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class GuideAdminService {
     private final CategoryRepository categoryRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final GuideStepRepository guideStepRepository;
+    private final FeedbackRepository feedbackRepository;
 
     // ---------- 서비스 ----------
 
@@ -69,6 +71,7 @@ public class GuideAdminService {
     public void deleteSubscription(Long id) {
         Subscription subscription = getSubscription(id);
         guideStepRepository.deleteAllBySubscription(subscription);
+        feedbackRepository.deleteAllBySubscription(subscription);
         subscriptionRepository.delete(subscription);
     }
 
