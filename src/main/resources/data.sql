@@ -4,12 +4,12 @@ INSERT INTO category (name, slug) VALUES ('음악', 'music');
 INSERT INTO category (name, slug) VALUES ('쇼핑 멤버십', 'shopping');
 
 -- 구독 서비스
-INSERT INTO subscription (category_id, name, slug, brand_color, refund_info, verified_at)
-VALUES (1, '넷플릭스', 'netflix', '#E50914', '해지해도 다음 결제일 전까지 이용할 수 있어요.', '2026-11-12');
-INSERT INTO subscription (category_id, name, slug, brand_color, refund_info, verified_at)
-VALUES (1, '티빙', 'tving', '#FF153C', '결제 후 이용 이력이 없으면 환불을 요청할 수 있어요.', '2026-11-12');
-INSERT INTO subscription (category_id, name, slug, brand_color, refund_info, verified_at)
-VALUES (2, '멜론', 'melon', '#00CD3C', '해지하면 다음 결제일부터 요금이 나가지 않아요.', '2026-11-12');
+INSERT INTO subscription (category_id, name, slug, brand_color, refund_info, verified_at, source)
+VALUES (1, '넷플릭스', 'netflix', '#E50914', '해지해도 다음 결제일 전까지 이용할 수 있어요.', '2026-11-12', 'ADMIN');
+INSERT INTO subscription (category_id, name, slug, brand_color, refund_info, verified_at, source)
+VALUES (1, '티빙', 'tving', '#FF153C', '결제 후 이용 이력이 없으면 환불을 요청할 수 있어요.', '2026-11-12', 'ADMIN');
+INSERT INTO subscription (category_id, name, slug, brand_color, refund_info, verified_at, source)
+VALUES (2, '멜론', 'melon', '#00CD3C', '해지하면 다음 결제일부터 요금이 나가지 않아요.', '2026-11-12', 'ADMIN');
 
 -- 넷플릭스 해지 단계
 INSERT INTO guide_step (subscription_id, step_order, screen_name, target_label, position, description)
