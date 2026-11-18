@@ -17,7 +17,7 @@
 
 <div th:if="${page.isEmpty()}">
     <p th:text="'아직 \'' + ${keyword} + '\'의 해지 방법이 없어요.'">결과가 없어요.</p>
-    <a th:href="@{/submit}">해지 방법 제보하기</a>
+    <a th:href="@{/submit(name=${keyword})}">해지 방법 제보하기</a>
 </div>
 
 <ul th:unless="${page.isEmpty()}">
