@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${subscription.name} + ' 해지 방법 | 구독 해지 가이드'">해지 방법 | 구독 해지 가이드</title>
     <link rel="stylesheet" th:href="@{/css/phone.css}">
+    <link rel="stylesheet" th:href="@{/css/guide.css}">
 </head>
 <body>
 <a th:href="@{/category/{slug}(slug=${subscription.category.slug})}"
@@ -12,8 +13,11 @@
 
 <h1 th:text="${subscription.name} + ' 해지 방법'">서비스 해지 방법</h1>
 
-<p th:if="${subscription.verifiedAt != null}"
-   th:text="'마지막 확인일: ' + ${#temporals.format(subscription.verifiedAt, 'yyyy년 M월 d일')}">마지막 확인일</p>
+<p class="guide-meta">
+    <span class="source-badge" th:text="${subscription.source.label}">관리자 작성</span>
+    <span th:if="${subscription.verifiedAt != null}"
+          th:text="'마지막 확인일: ' + ${#temporals.format(subscription.verifiedAt, 'yyyy년 M월 d일')}">마지막 확인일</span>
+</p>
 
 <h2>해지 단계</h2>
 
@@ -39,5 +43,15 @@
 
 <h2>환불 안내</h2>
 <p th:text="${subscription.refundInfo} ?: '등록된 환불 정보가 없어요.'">환불 정보</p>
+
+<section id="feedback" class="feedback">
+    <p th:if="${feedbackDone}">알려 주셔서 고마워요! 다른 분들께 큰 도움이 돼요.</p>
+
+    <form th:unless="${feedbackDone}" th:action="@{/guide/{slug}/feedback(slug=${subscription.slug})}" method="post">
+        <p>이 방법대로 해지가 되었나요?</p>
+        <button type="submit" name="helpful" value="true">이 방법이 맞았어요</button>
+        <button type="submit" name="helpful" value="false">달라요</button>
+    </form>
+</section>
 </body>
 </html>

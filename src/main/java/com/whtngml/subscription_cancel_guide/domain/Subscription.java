@@ -34,6 +34,10 @@ public class Subscription {
 
     private LocalDate verifiedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private GuideSource source = GuideSource.ADMIN;
+
     public Subscription(Category category, String name, String slug, String brandColor,
                         String refundInfo, LocalDate verifiedAt) {
         this.category = category;

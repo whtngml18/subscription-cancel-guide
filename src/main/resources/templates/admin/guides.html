@@ -25,6 +25,10 @@
         (<span th:text="${subscription.category.name}">카테고리</span>)
         <a th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">수정</a>
         <a th:href="@{/guide/{slug}(slug=${subscription.slug})}">사이트에서 보기</a>
+        <span th:with="count=${feedbackCounts.get(subscription.id)}"
+              th:text="${count == null}
+                        ? '피드백 없음'
+                        : '맞았어요 ' + ${count.helpful} + ' · 달라요 ' + ${count.notHelpful}">맞았어요 0 · 달라요 0</span>
     </li>
 </ul>
 </body>
