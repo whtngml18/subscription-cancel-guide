@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>해지 방법 제보하기 | 구독 해지 가이드</title>
+</head>
+<body>
+<a th:href="@{/}">← 처음으로</a>
+
+<h1>해지 방법 제보하기</h1>
+<p>직접 해지해 본 방법을 글로 알려 주세요. 관리자가 확인한 뒤 가이드로 올려요.</p>
+
+<form th:action="@{/submit}" th:object="${form}" method="post">
+    <div>
+        <label for="serviceName">서비스 이름</label>
+        <input type="text" id="serviceName" th:field="*{serviceName}" maxlength="50" placeholder="예: 유튜브 프리미엄">
+        <p th:if="${#fields.hasErrors('serviceName')}" th:errors="*{serviceName}">오류</p>
+    </div>
+
+    <div>
+        <label for="rawText">해지 방법</label>
+        <textarea id="rawText" th:field="*{rawText}" rows="8" maxlength="1000"
+                  placeholder="예: 앱 오른쪽 위 프로필을 누르고, 구매 및 멤버십에서 멤버십 해지를 눌러요."></textarea>
+        <p th:if="${#fields.hasErrors('rawText')}" th:errors="*{rawText}">오류</p>
+    </div>
+
+    <button type="submit">제출하기</button>
+</form>
+</body>
+</html>
