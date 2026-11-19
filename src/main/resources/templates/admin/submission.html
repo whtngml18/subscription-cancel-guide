@@ -21,12 +21,28 @@
         </div>
     </section>
 
+    <section class="card mb-4" th:unless="${aiSteps.isEmpty()}">
+        <div class="card-body">
+            <h2 class="h5 card-title">AI가 나눈 단계</h2>
+            <p class="text-secondary small">제보 원문과 비교해 보세요. 승인할 때 이 단계를 그대로 가져올 수 있어요.</p>
+            <ol class="phone-list">
+                <li th:each="step : ${aiSteps}">
+                    <figure th:replace="~{fragments/phone :: phone(${step}, null)}"></figure>
+                </li>
+            </ol>
+        </div>
+    </section>
+
     <th:block th:if="${submission.pending}">
         <section class="card border-primary mb-4" th:if="${sameName != null}">
             <div class="card-body">
                 <h2 class="h5 card-title">기존 서비스로 승인</h2>
                 <p th:text="'이미 \'' + ${sameName.name} + '\' 가이드가 있어요. 새로 만들지 않고 이 가이드를 고칠 수 있어요.'">이미 가이드가 있어요.</p>
                 <form th:action="@{/admin/submissions/{id}/approve-existing(id=${submission.id})}" method="post">
+                    <div class="form-check mb-3" th:unless="${aiSteps.isEmpty()}">
+                        <input class="form-check-input" type="checkbox" id="importAiStepsExisting" name="importAiSteps" value="true">
+                        <label class="form-check-label" for="importAiStepsExisting">기존 해지 단계를 지우고 AI 단계로 바꾸기</label>
+                    </div>
                     <button class="btn btn-primary" type="submit" th:text="'\'' + ${sameName.name} + '\'(으)로 승인'">기존 서비스로 승인</button>
                 </form>
             </div>
@@ -38,6 +54,10 @@
 
             <form class="card card-body" th:action="@{/admin/submissions/{id}/approve(id=${submission.id})}" th:object="${form}" method="post">
                 <th:block th:replace="~{fragments/subscription-fields :: fields}"></th:block>
+                <div class="form-check mb-3" th:unless="${aiSteps.isEmpty()}">
+                    <input class="form-check-input" type="checkbox" id="importAiSteps" name="importAiSteps" value="true" checked>
+                    <label class="form-check-label" for="importAiSteps">AI 단계를 해지 단계로 가져오기</label>
+                </div>
                 <div>
                     <button class="btn btn-primary" type="submit">새 서비스로 승인</button>
                 </div>

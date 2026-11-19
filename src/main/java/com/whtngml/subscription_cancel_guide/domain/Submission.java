@@ -23,6 +23,10 @@ public class Submission {
     @Column(nullable = false, length = 1000)
     private String rawText;
 
+    // AI가 나눈 단계 JSON (AI를 안 썼거나 실패했으면 null)
+    @Column(length = 5000)
+    private String aiStepsJson;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SubmissionStatus status;
@@ -35,9 +39,10 @@ public class Submission {
     @JoinColumn(name = "subscription_id")
     private Subscription subscription;
 
-    public Submission(String serviceName, String rawText) {
+    public Submission(String serviceName, String rawText, String aiStepsJson) {
         this.serviceName = serviceName;
         this.rawText = rawText;
+        this.aiStepsJson = aiStepsJson;
         this.status = SubmissionStatus.PENDING;
         this.createdAt = LocalDateTime.now();
     }

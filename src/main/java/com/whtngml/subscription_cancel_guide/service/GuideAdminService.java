@@ -113,6 +113,13 @@ public class GuideAdminService {
         guideStepRepository.save(step);
     }
 
+    // 기존 단계를 모두 지우고 AI가 나눈 단계로 바꾼다
+    @Transactional
+    public void replaceSteps(Long subscriptionId, List<GuideStepForm> forms) {
+        guideStepRepository.deleteAllBySubscription(getSubscription(subscriptionId));
+        forms.forEach(form -> createStep(subscriptionId, form));
+    }
+
     @Transactional
     public void updateStep(Long subscriptionId, Long stepId, GuideStepForm form) {
         GuideStep step = getStep(subscriptionId, stepId);

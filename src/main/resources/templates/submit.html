@@ -24,12 +24,42 @@
             <div class="form-text">10자 이상 1000자 이하로 적어 주세요.</div>
         </div>
 
-        <div>
-            <button class="btn btn-primary" type="submit">제출하기</button>
+        <input type="hidden" id="aiStepsJson" th:field="*{aiStepsJson}">
+
+        <div class="alert alert-warning" role="alert" th:if="${aiError != null}" th:text="${aiError}">AI 오류</div>
+
+        <section id="aiPreview" class="mb-3" th:if="${aiSteps != null}">
+            <h2 class="h5">AI가 이렇게 나눴어요</h2>
+            <p class="text-secondary small">AI가 만든 단계라 틀릴 수 있어요. 관리자가 확인한 뒤 공개해요. 마음에 들지 않으면 글을 고치고 다시 미리보기를 누르세요.</p>
+            <ol class="phone-list">
+                <li th:each="step : ${aiSteps}">
+                    <figure th:replace="~{fragments/phone :: phone(${step}, null)}"></figure>
+                </li>
+            </ol>
+        </section>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" type="submit" th:text="${aiSteps != null} ? '이대로 제출하기' : '제출하기'">제출하기</button>
+            <button class="btn btn-outline-primary" type="submit" th:formaction="@{/submit/preview}"
+                    th:if="${aiAvailable}">AI로 단계 미리보기</button>
         </div>
     </form>
 </main>
 
 <footer th:replace="~{fragments/layout :: siteFooter}"></footer>
+
+<script th:if="${aiSteps != null}">
+    // 미리보기 뒤에 글을 고치면 AI 단계가 글과 달라지므로 버린다
+    (function () {
+        var hidden = document.getElementById('aiStepsJson');
+        var preview = document.getElementById('aiPreview');
+        ['serviceName', 'rawText'].forEach(function (id) {
+            document.getElementById(id).addEventListener('input', function () {
+                hidden.value = '';
+                preview.hidden = true;
+            }, { once: true });
+        });
+    })();
+</script>
 </body>
 </html>

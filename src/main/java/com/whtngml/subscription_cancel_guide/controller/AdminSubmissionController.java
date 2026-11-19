@@ -61,6 +61,7 @@ public class AdminSubmissionController {
     public String approveAsNew(@PathVariable Long id,
                                @Valid @ModelAttribute("form") SubscriptionForm form,
                                BindingResult bindingResult,
+                               @RequestParam(defaultValue = "false") boolean importAiSteps,
                                Model model,
                                RedirectAttributes redirectAttributes) {
         Submission submission = submissionService.getSubmission(id);
@@ -74,15 +75,22 @@ public class AdminSubmissionController {
             return showDetail(submission, model);
         }
 
-        Long subscriptionId = submissionService.approveAsNew(id, form);
-        redirectAttributes.addFlashAttribute("message", "제보를 승인했어요. 아래 제보 원문을 보고 해지 단계를 추가하세요.");
+        Long subscriptionId = submissionService.approveAsNew(id, form, importAiSteps);
+        redirectAttributes.addFlashAttribute("message", importAiSteps && submission.getAiStepsJson() != null
+                ? "제보를 승인하고 AI 단계를 가져왔어요. 제보 원문과 비교해서 고치세요."
+                : "제보를 승인했어요. 아래 제보 원문을 보고 해지 단계를 추가하세요.");
         return "redirect:/admin/guides/" + subscriptionId + "/edit";
     }
 
     @PostMapping("/{id}/approve-existing")
-    public String approveToExisting(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        Long subscriptionId = submissionService.approveToExisting(id);
-        redirectAttributes.addFlashAttribute("message", "기존 서비스로 승인했어요. 제보 원문을 보고 해지 단계를 고치세요.");
+    public String approveToExisting(@PathVariable Long id,
+                                    @RequestParam(defaultValue = "false") boolean importAiSteps,
+                                    RedirectAttributes redirectAttributes) {
+        boolean hasAiSteps = submissionService.getSubmission(id).getAiStepsJson() != null;
+        Long subscriptionId = submissionService.approveToExisting(id, importAiSteps);
+        redirectAttributes.addFlashAttribute("message", importAiSteps && hasAiSteps
+                ? "기존 서비스로 승인하고 해지 단계를 AI 단계로 바꿨어요. 제보 원문과 비교해서 고치세요."
+                : "기존 서비스로 승인했어요. 제보 원문을 보고 해지 단계를 고치세요.");
         return "redirect:/admin/guides/" + subscriptionId + "/edit";
     }
 
@@ -97,6 +105,7 @@ public class AdminSubmissionController {
 
     private String showDetail(Submission submission, Model model) {
         model.addAttribute("submission", submission);
+        model.addAttribute("aiSteps", submissionService.getAiSteps(submission));
         model.addAttribute("sameName", submissionService.findSameNameSubscription(submission).orElse(null));
         model.addAttribute("categories", categoryRepository.findAll(Sort.by("id")));
         return "admin/submission";
