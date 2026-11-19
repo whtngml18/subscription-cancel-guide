@@ -1,36 +1,46 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex">
-    <title>가이드 관리 | 구독 해지 가이드</title>
-</head>
+<head th:replace="~{fragments/layout :: noindexHead('가이드 관리 | 구독 해지 가이드')}"></head>
 <body>
-<h1>가이드 관리</h1>
+<header th:replace="~{fragments/layout :: adminHeader}"></header>
 
-<form th:action="@{/admin/logout}" method="post">
-    <button type="submit">로그아웃</button>
-</form>
+<main class="container">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0 me-auto">가이드 관리</h1>
+        <a class="btn btn-outline-primary" th:href="@{/admin/submissions}" th:text="'제보 검토 (' + ${pendingCount} + '건)'">제보 검토 (0건)</a>
+        <a class="btn btn-primary" th:href="@{/admin/guides/new}">+ 새 서비스 등록</a>
+    </div>
 
-<p th:if="${message}" th:text="${message}">알림</p>
+    <div class="alert alert-success" th:if="${message}" th:text="${message}">알림</div>
 
-<a th:href="@{/admin/guides/new}">+ 새 서비스 등록</a>
-<a th:href="@{/admin/submissions}" th:text="'제보 검토 (' + ${pendingCount} + '건)'">제보 검토 (0건)</a>
+    <p class="text-secondary" th:if="${subscriptions.isEmpty()}">등록된 서비스가 없어요.</p>
 
-<p th:if="${subscriptions.isEmpty()}">등록된 서비스가 없어요.</p>
-
-<ul th:unless="${subscriptions.isEmpty()}">
-    <li th:each="subscription : ${subscriptions}">
-        <span th:text="${subscription.name}">서비스 이름</span>
-        (<span th:text="${subscription.category.name}">카테고리</span>)
-        <a th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">수정</a>
-        <a th:href="@{/guide/{slug}(slug=${subscription.slug})}">사이트에서 보기</a>
-        <span th:with="count=${feedbackCounts.get(subscription.id)}"
-              th:text="${count == null}
-                        ? '피드백 없음'
-                        : '맞았어요 ' + ${count.helpful} + ' · 달라요 ' + ${count.notHelpful}">맞았어요 0 · 달라요 0</span>
-    </li>
-</ul>
+    <div class="table-responsive" th:unless="${subscriptions.isEmpty()}">
+        <table class="table table-hover align-middle bg-white">
+            <thead>
+            <tr>
+                <th scope="col">서비스</th>
+                <th scope="col">카테고리</th>
+                <th scope="col">피드백</th>
+                <th scope="col"><span class="visually-hidden">관리</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="subscription : ${subscriptions}">
+                <td th:text="${subscription.name}">서비스 이름</td>
+                <td th:text="${subscription.category.name}">카테고리</td>
+                <td class="text-nowrap" th:with="count=${feedbackCounts.get(subscription.id)}"
+                    th:text="${count == null}
+                              ? '피드백 없음'
+                              : '맞았어요 ' + ${count.helpful} + ' · 달라요 ' + ${count.notHelpful}">맞았어요 0 · 달라요 0</td>
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">수정</a>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/guide/{slug}(slug=${subscription.slug})}">사이트에서 보기</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
 </body>
 </html>
