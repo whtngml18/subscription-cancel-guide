@@ -1,30 +1,40 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${category.name} + ' 구독 해지 방법 | 구독 해지 가이드'">카테고리 | 구독 해지 가이드</title>
-</head>
+<head th:replace="~{fragments/layout :: pageHead(${category.name} + ' 구독 해지 방법 | 구독 해지 가이드')}"></head>
 <body>
-<a th:href="@{/}">← 처음으로</a>
+<header th:replace="~{fragments/layout :: siteHeader(true)}"></header>
 
-<h1 th:text="${category.name}">카테고리 이름</h1>
+<main class="container">
+    <a class="d-inline-block mb-2" th:href="@{/}">← 처음으로</a>
 
-<p th:if="${page.isEmpty()}">아직 등록된 서비스가 없어요.</p>
+    <h1 class="h3 mb-3" th:text="${category.name}">카테고리 이름</h1>
 
-<ul th:unless="${page.isEmpty()}">
-    <li th:each="subscription : ${page.content}">
-        <a th:href="@{/guide/{slug}(slug=${subscription.slug})}"
+    <p class="text-secondary" th:if="${page.isEmpty()}">아직 등록된 서비스가 없어요.</p>
+
+    <div class="list-group" th:unless="${page.isEmpty()}">
+        <a class="list-group-item list-group-item-action py-3"
+           th:each="subscription : ${page.content}"
+           th:href="@{/guide/{slug}(slug=${subscription.slug})}"
            th:text="${subscription.name}">서비스 이름</a>
-    </li>
-</ul>
+    </div>
 
-<nav th:if="${page.totalPages > 1}">
-    <a th:if="${page.hasPrevious()}"
-       th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number - 1}, size=${page.size})}">← 이전</a>
-    <span th:text="${page.number + 1} + ' / ' + ${page.totalPages} + ' 페이지'">1 / 1 페이지</span>
-    <a th:if="${page.hasNext()}"
-       th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number + 1}, size=${page.size})}">다음 →</a>
-</nav>
+    <nav class="mt-4" th:if="${page.totalPages > 1}" aria-label="페이지">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${page.hasPrevious()} ? '' : 'disabled'">
+                <a class="page-link"
+                   th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number - 1}, size=${page.size})}">← 이전</a>
+            </li>
+            <li class="page-item active">
+                <span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span>
+            </li>
+            <li class="page-item" th:classappend="${page.hasNext()} ? '' : 'disabled'">
+                <a class="page-link"
+                   th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number + 1}, size=${page.size})}">다음 →</a>
+            </li>
+        </ul>
+    </nav>
+</main>
+
+<footer th:replace="~{fragments/layout :: siteFooter}"></footer>
 </body>
 </html>

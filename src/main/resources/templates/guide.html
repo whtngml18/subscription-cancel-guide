@@ -1,57 +1,73 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${subscription.name} + ' 해지 방법 | 구독 해지 가이드'">해지 방법 | 구독 해지 가이드</title>
-    <link rel="stylesheet" th:href="@{/css/phone.css}">
-    <link rel="stylesheet" th:href="@{/css/guide.css}">
-</head>
+<head th:replace="~{fragments/layout :: pageHead(${subscription.name} + ' 해지 방법 | 구독 해지 가이드')}"></head>
 <body>
-<a th:href="@{/category/{slug}(slug=${subscription.category.slug})}"
-   th:text="'← ' + ${subscription.category.name}">← 카테고리</a>
+<header th:replace="~{fragments/layout :: siteHeader(true)}"></header>
 
-<h1 th:text="${subscription.name} + ' 해지 방법'">서비스 해지 방법</h1>
+<main class="container">
+    <a class="d-inline-block mb-2"
+       th:href="@{/category/{slug}(slug=${subscription.category.slug})}"
+       th:text="'← ' + ${subscription.category.name}">← 카테고리</a>
 
-<p class="guide-meta">
-    <span class="source-badge" th:text="${subscription.source.label}">관리자 작성</span>
-    <span th:if="${subscription.verifiedAt != null}"
-          th:text="'마지막 확인일: ' + ${#temporals.format(subscription.verifiedAt, 'yyyy년 M월 d일')}">마지막 확인일</span>
-</p>
+    <h1 class="h2 fw-bold" th:text="${subscription.name} + ' 해지 방법'">서비스 해지 방법</h1>
 
-<h2>해지 단계</h2>
+    <p class="d-flex flex-wrap align-items-center gap-2 text-secondary">
+        <span class="badge rounded-pill"
+              th:classappend="${subscription.source.name() == 'ADMIN'} ? 'text-bg-secondary' : 'text-bg-info'"
+              th:text="${subscription.source.label}">관리자 작성</span>
+        <span th:if="${subscription.verifiedAt != null}"
+              th:text="'마지막 확인일: ' + ${#temporals.format(subscription.verifiedAt, 'yyyy년 M월 d일')}">마지막 확인일</span>
+    </p>
 
-<p th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
+    <section class="mt-4">
+        <h2 class="h4">해지 단계</h2>
 
-<ol th:unless="${steps.isEmpty()}">
-    <li th:each="step : ${steps}">
-        <strong>
-            [<span th:text="${step.screenName}">화면</span>]
-            <span th:text="${step.targetLabel}">누를 버튼</span>
-        </strong>
-        <p th:text="${step.description}">설명</p>
-    </li>
-</ol>
+        <p class="text-secondary" th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
 
-<h3 th:unless="${steps.isEmpty()}">화면으로 보기</h3>
+        <ol class="list-group list-group-numbered" th:unless="${steps.isEmpty()}">
+            <li class="list-group-item d-flex gap-2" th:each="step : ${steps}">
+                <div>
+                    <strong>
+                        [<span th:text="${step.screenName}">화면</span>]
+                        <span th:text="${step.targetLabel}">누를 버튼</span>
+                    </strong>
+                    <p class="mb-0 text-secondary" th:text="${step.description}">설명</p>
+                </div>
+            </li>
+        </ol>
+    </section>
 
-<ol class="phone-list" th:unless="${steps.isEmpty()}">
-    <li th:each="step : ${steps}">
-        <figure th:replace="~{fragments/phone :: phone(${step}, ${subscription.brandColor})}"></figure>
-    </li>
-</ol>
+    <section class="mt-4" th:unless="${steps.isEmpty()}">
+        <h2 class="h5">화면으로 보기</h2>
+        <ol class="phone-list">
+            <li th:each="step : ${steps}">
+                <figure th:replace="~{fragments/phone :: phone(${step}, ${subscription.brandColor})}"></figure>
+            </li>
+        </ol>
+    </section>
 
-<h2>환불 안내</h2>
-<p th:text="${subscription.refundInfo} ?: '등록된 환불 정보가 없어요.'">환불 정보</p>
+    <section class="card mt-4">
+        <div class="card-body">
+            <h2 class="h5 card-title">환불 안내</h2>
+            <p class="card-text" th:text="${subscription.refundInfo} ?: '등록된 환불 정보가 없어요.'">환불 정보</p>
+        </div>
+    </section>
 
-<section id="feedback" class="feedback">
-    <p th:if="${feedbackDone}">알려 주셔서 고마워요! 다른 분들께 큰 도움이 돼요.</p>
+    <section id="feedback" class="card mt-4">
+        <div class="card-body text-center">
+            <p class="mb-0" th:if="${feedbackDone}">알려 주셔서 고마워요! 다른 분들께 큰 도움이 돼요.</p>
 
-    <form th:unless="${feedbackDone}" th:action="@{/guide/{slug}/feedback(slug=${subscription.slug})}" method="post">
-        <p>이 방법대로 해지가 되었나요?</p>
-        <button type="submit" name="helpful" value="true">이 방법이 맞았어요</button>
-        <button type="submit" name="helpful" value="false">달라요</button>
-    </form>
-</section>
+            <form th:unless="${feedbackDone}" th:action="@{/guide/{slug}/feedback(slug=${subscription.slug})}" method="post">
+                <p class="fw-semibold">이 방법대로 해지가 되었나요?</p>
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                    <button class="btn btn-success" type="submit" name="helpful" value="true">이 방법이 맞았어요</button>
+                    <button class="btn btn-outline-secondary" type="submit" name="helpful" value="false">달라요</button>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: siteFooter}"></footer>
 </body>
 </html>
