@@ -1,0 +1,33 @@
+# 배포용 설정. 환경변수 SPRING_PROFILES_ACTIVE=prod 일 때 application.yaml 위에 덮어쓴다.
+# 비밀번호와 키는 모두 배포 서버(Railway)의 환경변수로 넣고, 이 파일에는 쓰지 않는다.
+spring:
+  datasource:
+    # Railway MySQL이 만들어 주는 환경변수 이름
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT:3306}/${MYSQLDATABASE}?characterEncoding=UTF-8
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
+  jpa:
+    show-sql: false
+    hibernate:
+      # 엔티티를 보고 없는 테이블·칼럼만 만든다 (지우지는 않는다)
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: false
+  sql:
+    init:
+      # 앱이 켜질 때마다 실행되므로 data-mysql.sql은 여러 번 실행해도 중복되지 않게 쓴다
+      mode: always
+      data-locations: classpath:data-mysql.sql
+  security:
+    user:
+      # 기본값 없음: ADMIN_PASSWORD를 넣지 않으면 앱이 켜지지 않는다
+      password: ${ADMIN_PASSWORD}
+
+server:
+  port: ${PORT:8080}
+  # Railway 앞단 프록시가 HTTPS를 처리하므로, 프록시가 보낸 헤더로 https 주소와 실제 사용자 IP를 알아낸다
+  forward-headers-strategy: framework
