@@ -1,58 +1,60 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex">
-    <title th:text="${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정') + ' | 구독 해지 가이드'">단계 | 구독 해지 가이드</title>
-</head>
+<head th:replace="~{fragments/layout :: noindexHead(${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정') + ' | 구독 해지 가이드')}"></head>
 <body>
-<a th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}" th:text="'← ' + ${subscription.name}">← 서비스</a>
+<header th:replace="~{fragments/layout :: adminHeader}"></header>
 
-<h1 th:text="${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정')">단계</h1>
+<main class="container">
+    <a class="d-inline-block mb-2" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}" th:text="'← ' + ${subscription.name}">← 서비스</a>
 
-<form th:action="${stepId == null}
-                    ? @{/admin/guides/{id}/steps/new(id=${subscription.id})}
-                    : @{/admin/guides/{id}/steps/{stepId}/edit(id=${subscription.id}, stepId=${stepId})}"
-      th:object="${form}" method="post">
-    <div>
-        <label for="stepOrder">단계 번호</label>
-        <input type="number" id="stepOrder" th:field="*{stepOrder}" min="1" max="50">
-        <p th:if="${#fields.hasErrors('stepOrder')}" th:errors="*{stepOrder}">오류</p>
-    </div>
+    <h1 class="h3 mb-3" th:text="${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정')">단계</h1>
 
-    <div>
-        <label for="screenName">화면 이름 (지금 보고 있는 화면)</label>
-        <input type="text" id="screenName" th:field="*{screenName}" placeholder="프로필">
-        <p th:if="${#fields.hasErrors('screenName')}" th:errors="*{screenName}">오류</p>
-    </div>
+    <form class="card card-body"
+          th:action="${stepId == null}
+                        ? @{/admin/guides/{id}/steps/new(id=${subscription.id})}
+                        : @{/admin/guides/{id}/steps/{stepId}/edit(id=${subscription.id}, stepId=${stepId})}"
+          th:object="${form}" method="post">
+        <div class="mb-3">
+            <label class="form-label" for="stepOrder">단계 번호</label>
+            <input class="form-control" th:errorclass="is-invalid" type="number" id="stepOrder" th:field="*{stepOrder}" min="1" max="50">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('stepOrder')}" th:errors="*{stepOrder}">오류</div>
+        </div>
 
-    <div>
-        <label for="targetLabel">누를 버튼</label>
-        <input type="text" id="targetLabel" th:field="*{targetLabel}" placeholder="계정">
-        <p th:if="${#fields.hasErrors('targetLabel')}" th:errors="*{targetLabel}">오류</p>
-    </div>
+        <div class="mb-3">
+            <label class="form-label" for="screenName">화면 이름 (지금 보고 있는 화면)</label>
+            <input class="form-control" th:errorclass="is-invalid" type="text" id="screenName" th:field="*{screenName}" placeholder="프로필">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('screenName')}" th:errors="*{screenName}">오류</div>
+        </div>
 
-    <div>
-        <label for="position">버튼 위치</label>
-        <select id="position" th:field="*{position}">
-            <option value="">모름</option>
-            <option value="top-left">왼쪽 위</option>
-            <option value="top-right">오른쪽 위</option>
-            <option value="middle">가운데</option>
-            <option value="bottom">아래</option>
-        </select>
-        <p th:if="${#fields.hasErrors('position')}" th:errors="*{position}">오류</p>
-    </div>
+        <div class="mb-3">
+            <label class="form-label" for="targetLabel">누를 버튼</label>
+            <input class="form-control" th:errorclass="is-invalid" type="text" id="targetLabel" th:field="*{targetLabel}" placeholder="계정">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('targetLabel')}" th:errors="*{targetLabel}">오류</div>
+        </div>
 
-    <div>
-        <label for="description">설명</label>
-        <textarea id="description" th:field="*{description}" rows="2" placeholder="메뉴에서 계정을 눌러요."></textarea>
-        <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}">오류</p>
-    </div>
+        <div class="mb-3">
+            <label class="form-label" for="position">버튼 위치</label>
+            <select class="form-select" th:errorclass="is-invalid" id="position" th:field="*{position}">
+                <option value="">모름</option>
+                <option value="top-left">왼쪽 위</option>
+                <option value="top-right">오른쪽 위</option>
+                <option value="middle">가운데</option>
+                <option value="bottom">아래</option>
+            </select>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('position')}" th:errors="*{position}">오류</div>
+        </div>
 
-    <button type="submit" th:text="${stepId == null ? '추가' : '저장'}">저장</button>
-    <a th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">취소</a>
-</form>
+        <div class="mb-3">
+            <label class="form-label" for="description">설명</label>
+            <textarea class="form-control" th:errorclass="is-invalid" id="description" th:field="*{description}" rows="2" placeholder="메뉴에서 계정을 눌러요."></textarea>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">오류</div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit" th:text="${stepId == null ? '추가' : '저장'}">저장</button>
+            <a class="btn btn-outline-secondary" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">취소</a>
+        </div>
+    </form>
+</main>
 </body>
 </html>

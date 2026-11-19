@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  서비스 정보 입력 칸 (SubscriptionForm)
+  서비스 등록·수정 화면과 제보 승인 화면이 함께 쓴다. th:object="${form}"인 <form> 안에 넣는다.
+-->
+<th:block th:fragment="fields">
+    <div class="mb-3">
+        <label class="form-label" for="categoryId">카테고리</label>
+        <select class="form-select" th:errorclass="is-invalid" id="categoryId" th:field="*{categoryId}">
+            <option value="">선택하세요</option>
+            <option th:each="category : ${categories}"
+                    th:value="${category.id}"
+                    th:text="${category.name}">카테고리</option>
+        </select>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">오류</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="name">서비스 이름</label>
+        <input class="form-control" th:errorclass="is-invalid" type="text" id="name" th:field="*{name}" placeholder="디즈니 플러스">
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">오류</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="slug">slug (주소에 쓰는 영어 이름)</label>
+        <input class="form-control" th:errorclass="is-invalid" type="text" id="slug" th:field="*{slug}" placeholder="disney-plus">
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">오류</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="brandColor">브랜드 색</label>
+        <input class="form-control" th:errorclass="is-invalid" type="text" id="brandColor" th:field="*{brandColor}" placeholder="#113CCF">
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('brandColor')}" th:errors="*{brandColor}">오류</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="refundInfo">환불 안내</label>
+        <textarea class="form-control" th:errorclass="is-invalid" id="refundInfo" th:field="*{refundInfo}" rows="3"></textarea>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('refundInfo')}" th:errors="*{refundInfo}">오류</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="verifiedAt">마지막 확인일</label>
+        <input class="form-control" type="date" id="verifiedAt" th:field="*{verifiedAt}">
+    </div>
+</th:block>
+</body>
+</html>

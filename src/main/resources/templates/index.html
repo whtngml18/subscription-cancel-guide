@@ -1,28 +1,37 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>구독 해지 가이드</title>
-</head>
+<head th:replace="~{fragments/layout :: pageHead('구독 해지 가이드')}"></head>
 <body>
-<h1>구독 해지 가이드</h1>
-<p>구독 해지 방법을 단계별 그림으로 알려드려요.</p>
+<header th:replace="~{fragments/layout :: siteHeader(false)}"></header>
 
-<form th:action="@{/search}" method="get">
+<main class="container">
+    <section class="text-center py-4">
+        <h1 class="fw-bold">구독 해지 가이드</h1>
+        <p class="lead text-secondary">구독 해지 방법을 단계별 그림으로 알려드려요.</p>
 
-    <input type="text" name="q" placeholder="서비스 이름을 입력하세요">
+        <form class="d-flex gap-2 mx-auto mt-4" style="max-width: 560px" th:action="@{/search}" method="get" role="search">
+            <input class="form-control form-control-lg" type="search" name="q"
+                   placeholder="예: 넷플릭스" aria-label="서비스 이름">
+            <button class="btn btn-primary btn-lg text-nowrap" type="submit">검색</button>
+        </form>
+    </section>
 
-    <button type="submit">검색</button>
+    <section class="mt-4">
+        <h2 class="h4 mb-3">카테고리</h2>
+        <div class="row g-3">
+            <div class="col-6 col-md-4" th:each="category : ${categories}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center py-4">
+                        <a class="stretched-link fw-semibold text-decoration-none"
+                           th:href="@{/category/{slug}(slug=${category.slug})}"
+                           th:text="${category.name}">카테고리 이름</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 
-</form>
-
-<h2>카테고리</h2>
-<ul>
-    <li th:each="category : ${categories}">
-        <a th:href="@{/category/{slug}(slug=${category.slug})}"
-           th:text="${category.name}">카테고리 이름</a>
-    </li>
-</ul>
+<footer th:replace="~{fragments/layout :: siteFooter}"></footer>
 </body>
 </html>

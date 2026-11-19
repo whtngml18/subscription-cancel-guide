@@ -1,27 +1,24 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex">
-    <title>관리자 로그인 | 구독 해지 가이드</title>
-</head>
+<head th:replace="~{fragments/layout :: noindexHead('관리자 로그인 | 구독 해지 가이드')}"></head>
 <body>
-<h1>관리자 로그인</h1>
+<main class="container py-5" style="max-width: 420px">
+    <h1 class="h3 mb-3 text-center">관리자 로그인</h1>
 
-<p th:if="${param.error}">아이디 또는 비밀번호가 맞지 않아요.</p>
-<p th:if="${param.logout}">로그아웃했어요.</p>
+    <div class="alert alert-danger" th:if="${param.error}">아이디 또는 비밀번호가 맞지 않아요.</div>
+    <div class="alert alert-success" th:if="${param.logout}">로그아웃했어요.</div>
 
-<form th:action="@{/admin/login}" method="post">
-    <div>
-        <label for="username">아이디</label>
-        <input type="text" id="username" name="username" required>
-    </div>
-    <div>
-        <label for="password">비밀번호</label>
-        <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit">로그인</button>
-</form>
+    <form class="card card-body" th:action="@{/admin/login}" method="post">
+        <div class="mb-3">
+            <label class="form-label" for="username">아이디</label>
+            <input class="form-control" type="text" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="password">비밀번호</label>
+            <input class="form-control" type="password" id="password" name="password" required>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">로그인</button>
+    </form>
+</main>
 </body>
 </html>
