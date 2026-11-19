@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: pageHead(${category.name} + ' 구독 해지 방법 | 구독 해지 가이드')}"></head>
+<head th:replace="~{fragments/layout :: pageHead(${category.name} + ' 구독 해지 방법 | 구독 해지 가이드', ${category.name} + ' 구독 서비스의 해지 방법을 모았어요. 서비스를 고르면 단계별 화면 그림으로 볼 수 있어요.', '/category/' + ${category.slug})}"></head>
 <body>
 <header th:replace="~{fragments/layout :: siteHeader(true)}"></header>
 
