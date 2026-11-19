@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#0d6efd">
+    <title>인터넷 연결 없음 | 구독 해지 가이드</title>
+    <!-- 인터넷이 없을 때 보이는 화면이라 Bootstrap 없이 스타일을 이 파일 안에 넣는다 -->
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            background: #f7f8fa;
+            color: #212529;
+            font-family: system-ui, -apple-system, "Malgun Gothic", sans-serif;
+            word-break: keep-all;
+            text-align: center;
+        }
+        .box {
+            max-width: 400px;
+            padding: 32px 24px;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            background: #fff;
+        }
+        img {
+            width: 72px;
+            height: 72px;
+        }
+        h1 {
+            font-size: 1.4rem;
+        }
+        p {
+            color: #6c757d;
+            line-height: 1.6;
+        }
+        button {
+            margin-top: 8px;
+            padding: 10px 20px;
+            border: 0;
+            border-radius: 8px;
+            background: #0d6efd;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<main class="box">
+    <img src="/icons/icon-192.png" alt="">
+    <h1>인터넷에 연결되지 않았어요</h1>
+    <p>와이파이나 모바일 데이터를 확인한 뒤 다시 시도해 주세요.</p>
+    <button type="button" onclick="location.reload()">다시 시도</button>
+</main>
+</body>
+</html>
