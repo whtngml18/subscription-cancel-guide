@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: pageHead(${subscription.name} + ' 해지 방법 | 구독 해지 가이드')}"></head>
+<head th:replace="~{fragments/layout :: pageHead(${subscription.name} + ' 해지 방법 | 구독 해지 가이드', ${subscription.name} + ' 구독 해지 방법을 ' + ${steps.size()} + '단계 화면 그림으로 알려드려요. 환불 안내와 마지막 확인일도 함께 확인하세요.', '/guide/' + ${subscription.slug})}"></head>
 <body>
 <header th:replace="~{fragments/layout :: siteHeader(true)}"></header>
 
@@ -69,5 +69,10 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: siteFooter}"></footer>
+
+<!-- 검색엔진용 구조화 데이터 (Controller의 howTo). th:inline이 글자를 안전한 JSON으로 바꾼다 -->
+<script type="application/ld+json" th:if="${!steps.isEmpty()}" th:inline="javascript">
+/*[[${howTo}]]*/ {}
+</script>
 </body>
 </html>

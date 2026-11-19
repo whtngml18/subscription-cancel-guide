@@ -25,3 +25,6 @@ spring:
       password: ${ADMIN_PASSWORD:dev-admin-1234}
       roles: ADMIN
 
+# 사이트 주소 (canonical, Open Graph, sitemap에 사용). 끝에 /를 붙이지 않는다. 배포할 때 환경변수 APP_BASE_URL로 바꾼다.
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
