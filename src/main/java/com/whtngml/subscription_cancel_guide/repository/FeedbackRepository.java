@@ -22,4 +22,8 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     List<FeedbackCount> countAllBySubscription();
 
     void deleteAllBySubscription(Subscription subscription);
+
+    long countBySubscription(Subscription subscription);
+
+    long countBySubscriptionAndHelpfulTrue(Subscription subscription);
 }
