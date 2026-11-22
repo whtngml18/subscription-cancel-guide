@@ -29,7 +29,7 @@ public final class PhoneRows {
 
     public static List<PhoneRow> of(String position, String targetLabel, String otherMenus) {
         int targetIndex = targetIndex(position);
-        String target = targetLabel == null ? null : targetLabel.strip();
+        String target = targetLabel == null ? "" : targetLabel.strip();
         Iterator<String> menus = splitMenus(otherMenus).stream()
                 .filter(menu -> !menu.equals(target))
                 .iterator();
