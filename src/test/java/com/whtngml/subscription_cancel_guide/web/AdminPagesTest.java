@@ -34,6 +34,9 @@ class AdminPagesTest {
     SubmissionRepository submissionRepository;
 
     @Autowired
+    com.whtngml.subscription_cancel_guide.repository.IconImageRepository iconImageRepository;
+
+    @Autowired
     com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository subscriptionRepository;
 
     @Autowired
@@ -142,5 +145,49 @@ class AdminPagesTest {
                 .andExpect(status().is3xxRedirection());
         org.junit.jupiter.api.Assertions.assertEquals(steps.size() - 1,
                 guideStepRepository.findAllBySubscriptionOrderByStepOrderAsc(netflix).size());
+    }
+
+    Submission saveRichSubmission(String name) {
+        var icon = iconImageRepository.save(new com.whtngml.subscription_cancel_guide.domain.IconImage(
+                com.whtngml.subscription_cancel_guide.service.IconValidatorTest.PNG, "image/png"));
+        return submissionRepository.save(new Submission(name, "설정에서 해지를 눌러요 열 글자", null,
+                java.util.EnumSet.of(com.whtngml.subscription_cancel_guide.domain.CancelChannel.APP), "주의", icon));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void submissionsListShowsAttachments() throws Exception {
+        saveRichSubmission("왓챠");
+        mvc.perform(get("/admin/submissions")).andExpect(status().isOk())
+                .andExpect(content().string(containsString(">아이콘<")))
+                .andExpect(content().string(containsString(">추가 정보<")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void submissionDetailIsTwoColumns() throws Exception {
+        Submission s = saveRichSubmission("왓챠");
+        mvc.perform(get("/admin/submissions/{id}", s.getId())).andExpect(status().isOk())
+                .andExpect(content().string(containsString("cols-2")))
+                .andExpect(content().string(containsString("보낸 내용")))
+                .andExpect(content().string(not(containsString("phone-list"))));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void approveCheckboxDefaultsKept() throws Exception {
+        Submission s = saveRichSubmission("넷플릭스");
+        String html = mvc.perform(get("/admin/submissions/{id}", s.getId())).andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertTrue(inputTag(html, "importDetails").contains("checked"));
+        org.junit.jupiter.api.Assertions.assertTrue(inputTag(html, "importIcon").contains("checked"));
+        org.junit.jupiter.api.Assertions.assertFalse(inputTag(html, "importDetailsExisting").contains("checked"));
+        org.junit.jupiter.api.Assertions.assertFalse(inputTag(html, "importIconExisting").contains("checked"));
+    }
+
+    // id가 같은 <input ...> 태그 하나를 잘라 낸다
+    private static String inputTag(String html, String id) {
+        int at = html.indexOf("id=\"" + id + "\"");
+        int start = html.lastIndexOf("<input", at);
+        return html.substring(start, html.indexOf('>', at) + 1);
     }
 }

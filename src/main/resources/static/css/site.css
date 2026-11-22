@@ -893,3 +893,18 @@ main.wrap-wide {
     font-size: 1.4rem;
     text-align: center;
 }
+
+.check-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0 0 16px;
+}
+
+.check-list label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.check-list .field-help { margin: -4px 0 4px 24px; }
