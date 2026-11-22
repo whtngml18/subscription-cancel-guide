@@ -2,6 +2,7 @@ package com.whtngml.subscription_cancel_guide.controller;
 
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
+import com.whtngml.subscription_cancel_guide.service.GuideListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ public class SearchController {
     private static final int MAX_PAGE_SIZE = 10;
 
     private final SubscriptionRepository subscriptionRepository;
+    private final GuideListService guideListService;
 
     @GetMapping("/search")
     public String search(@RequestParam(defaultValue = "") String q,
@@ -39,6 +41,7 @@ public class SearchController {
 
         model.addAttribute("keyword", keyword);
         model.addAttribute("page", result);
+        model.addAttribute("stepCounts", guideListService.stepCounts());
         return "search";
     }
 }

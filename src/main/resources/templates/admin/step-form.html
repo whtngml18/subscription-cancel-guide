@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: noindexHead(${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정') + ' | 구독 해지 가이드')}"></head>
+<head th:replace="~{fragments/layout :: adminHead(${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정') + ' | 구독 해지 가이드')}"></head>
 <body>
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 

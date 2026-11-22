@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 브레인스토밍 목업 ###
+.superpowers/

@@ -2,6 +2,7 @@ package com.whtngml.subscription_cancel_guide.controller;
 
 import com.whtngml.subscription_cancel_guide.domain.GuideStep;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
+import com.whtngml.subscription_cancel_guide.dto.GuideSummary;
 import com.whtngml.subscription_cancel_guide.repository.GuideStepRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
 import com.whtngml.subscription_cancel_guide.service.FeedbackService;
@@ -36,6 +37,8 @@ public class GuideController {
 
         model.addAttribute("subscription", subscription);
         model.addAttribute("steps", steps);
+        model.addAttribute("summary", GuideSummary.of(steps));
+        model.addAttribute("feedbackCount", feedbackService.countFor(subscription));
         model.addAttribute("howTo", howTo(subscription, steps));
         return "guide";
     }

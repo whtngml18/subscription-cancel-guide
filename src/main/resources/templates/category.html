@@ -4,34 +4,27 @@
 <body>
 <header th:replace="~{fragments/layout :: siteHeader(true)}"></header>
 
-<main class="container">
-    <a class="d-inline-block mb-2" th:href="@{/}">← 처음으로</a>
+<main class="wrap">
+    <nav th:replace="~{fragments/layout :: breadcrumb(null, ${category.name})}"></nav>
 
-    <h1 class="h3 mb-3" th:text="${category.name}">카테고리 이름</h1>
+    <h1 th:text="${category.name} + ' 해지 방법'">카테고리 해지 방법</h1>
 
-    <p class="text-secondary" th:if="${page.isEmpty()}">아직 등록된 서비스가 없어요.</p>
+    <p class="muted" th:if="${page.isEmpty()}">아직 등록된 서비스가 없어요.</p>
 
-    <div class="list-group" th:unless="${page.isEmpty()}">
-        <a class="list-group-item list-group-item-action py-3"
-           th:each="subscription : ${page.content}"
-           th:href="@{/guide/{slug}(slug=${subscription.slug})}"
-           th:text="${subscription.name}">서비스 이름</a>
-    </div>
+    <ul class="svc-list" th:unless="${page.isEmpty()}">
+        <li th:each="subscription : ${page.content}">
+            <a th:replace="~{fragments/ui :: serviceRow(${subscription}, ${stepCounts[subscription.id] ?: 0})}"></a>
+        </li>
+    </ul>
 
-    <nav class="mt-4" th:if="${page.totalPages > 1}" aria-label="페이지">
-        <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${page.hasPrevious()} ? '' : 'disabled'">
-                <a class="page-link"
-                   th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number - 1}, size=${page.size})}">← 이전</a>
-            </li>
-            <li class="page-item active">
-                <span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span>
-            </li>
-            <li class="page-item" th:classappend="${page.hasNext()} ? '' : 'disabled'">
-                <a class="page-link"
-                   th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number + 1}, size=${page.size})}">다음 →</a>
-            </li>
-        </ul>
+    <nav class="pager" th:if="${page.totalPages > 1}" aria-label="페이지">
+        <a th:if="${page.hasPrevious()}"
+           th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number - 1}, size=${page.size})}">← 이전</a>
+        <span th:unless="${page.hasPrevious()}" aria-disabled="true">← 이전</span>
+        <span th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span>
+        <a th:if="${page.hasNext()}"
+           th:href="@{/category/{slug}(slug=${category.slug}, page=${page.number + 1}, size=${page.size})}">다음 →</a>
+        <span th:unless="${page.hasNext()}" aria-disabled="true">다음 →</span>
     </nav>
 </main>
 
