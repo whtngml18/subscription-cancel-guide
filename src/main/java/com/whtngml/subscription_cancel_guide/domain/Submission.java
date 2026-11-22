@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
+import java.util.Set;
 
 // 사용자가 글로 보낸 해지 방법 제보. 관리자가 승인해야 가이드로 공개된다.
 @Entity
@@ -27,6 +29,19 @@ public class Submission {
     @Column(length = 5000)
     private String aiStepsJson;
 
+    // 사용자가 더 알려 준 정보 (모두 선택)
+    @Convert(converter = ChannelSetConverter.class)
+    @Column(length = 40)
+    private Set<CancelChannel> channels = EnumSet.noneOf(CancelChannel.class);
+
+    @Column(length = 500)
+    private String caution;
+
+    // 승인 전에는 공개 주소(/icons/{id})로 보이지 않는다
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "icon_id")
+    private IconImage icon;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SubmissionStatus status;
@@ -39,12 +54,22 @@ public class Submission {
     @JoinColumn(name = "subscription_id")
     private Subscription subscription;
 
-    public Submission(String serviceName, String rawText, String aiStepsJson) {
+    public Submission(String serviceName, String rawText, String aiStepsJson,
+                      Set<CancelChannel> channels, String caution, IconImage icon) {
         this.serviceName = serviceName;
         this.rawText = rawText;
         this.aiStepsJson = aiStepsJson;
+        this.channels = channels == null || channels.isEmpty()
+                ? EnumSet.noneOf(CancelChannel.class) : EnumSet.copyOf(channels);
+        this.caution = caution;
+        this.icon = icon;
         this.status = SubmissionStatus.PENDING;
         this.createdAt = LocalDateTime.now();
+    }
+
+    // 해지하는 곳이나 주의할 점을 알려 줬는지 (승인 화면의 "가져오기" 체크박스 표시 여부)
+    public boolean hasDetails() {
+        return !channels.isEmpty() || (caution != null && !caution.isBlank());
     }
 
     public boolean isPending() {

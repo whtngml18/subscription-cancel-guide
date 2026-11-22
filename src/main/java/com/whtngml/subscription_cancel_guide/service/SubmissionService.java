@@ -2,6 +2,7 @@ package com.whtngml.subscription_cancel_guide.service;
 
 import com.whtngml.subscription_cancel_guide.ai.AiStepsJson;
 import com.whtngml.subscription_cancel_guide.ai.StepParseException;
+import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Submission;
 import com.whtngml.subscription_cancel_guide.domain.SubmissionStatus;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
@@ -35,9 +36,10 @@ public class SubmissionService {
     private final AiStepsJson aiStepsJson;
 
     @Transactional
-    public Long submit(SubmissionForm form) {
+    public Long submit(SubmissionForm form, IconImage icon) {
+        String caution = form.getCaution() == null || form.getCaution().isBlank() ? null : form.getCaution().strip();
         Submission submission = new Submission(form.getServiceName().strip(), form.getRawText().strip(),
-                checkAiStepsJson(form.getAiStepsJson()));
+                checkAiStepsJson(form.getAiStepsJson()), form.getChannels(), caution, icon);
         return submissionRepository.save(submission).getId();
     }
 
@@ -93,26 +95,43 @@ public class SubmissionService {
     }
 
     // 새 서비스를 만들고 승인한다. 서비스 생성과 승인이 함께 성공하거나 함께 취소된다.
+    // 관리자가 폼에서 올린 아이콘(uploadedIcon)이 있으면 그것이 제보 아이콘보다 우선이다.
     @Transactional
-    public Long approveAsNew(Long submissionId, SubscriptionForm form, boolean importAiSteps) {
+    public Long approveAsNew(Long submissionId, SubscriptionForm form, IconImage uploadedIcon,
+                             boolean importAiSteps, boolean importDetails, boolean importIcon) {
         Submission submission = getPendingSubmission(submissionId);
-        Long subscriptionId = guideAdminService.createSubscription(form);
+        Long subscriptionId = guideAdminService.createSubscription(form, uploadedIcon);
         Subscription subscription = guideAdminService.getSubscription(subscriptionId);
         subscription.markAsUserSubmission();
         submission.approve(subscription);
         importAiSteps(submission, subscriptionId, importAiSteps);
+        importDetails(submission, subscription, importDetails, importIcon && uploadedIcon == null);
         return subscriptionId;
     }
 
     // 같은 이름의 기존 서비스에 연결해 승인한다
     @Transactional
-    public Long approveToExisting(Long submissionId, boolean importAiSteps) {
+    public Long approveToExisting(Long submissionId, boolean importAiSteps, boolean importDetails, boolean importIcon) {
         Submission submission = getPendingSubmission(submissionId);
         Subscription subscription = findSameNameSubscription(submission)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "같은 이름의 서비스가 없어요."));
         submission.approve(subscription);
         importAiSteps(submission, subscription.getId(), importAiSteps);
+        importDetails(submission, subscription, importDetails, importIcon);
         return subscription.getId();
+    }
+
+    // 체크했고 제보에 값이 있는 칸만 바꾼다 (해지하는 곳·주의할 점은 따로따로)
+    private void importDetails(Submission submission, Subscription subscription, boolean importDetails, boolean importIcon) {
+        if (importDetails) {
+            boolean hasCaution = submission.getCaution() != null && !submission.getCaution().isBlank();
+            subscription.changeChannelsAndCaution(
+                    submission.getChannels().isEmpty() ? subscription.getChannels() : submission.getChannels(),
+                    hasCaution ? submission.getCaution() : subscription.getCaution());
+        }
+        if (importIcon && submission.getIcon() != null) {
+            subscription.changeIcon(submission.getIcon());
+        }
     }
 
     // 체크했고 AI 단계가 있으면 서비스의 해지 단계를 AI 단계로 바꾼다

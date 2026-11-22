@@ -255,7 +255,63 @@ textarea {
     border-width: 2px;
 }
 
+/* 제보 화면 "더 알려 주실 수 있나요?" 접는 칸 */
+.more {
+    margin: 0 0 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+
+.more summary {
+    padding: 12px 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.more[open] summary { border-bottom: 1px solid var(--line); }
+
+.more > :not(summary) { margin: 16px; }
+
+fieldset.field {
+    padding: 0;
+    border: 0;
+}
+
+fieldset.field legend {
+    margin-bottom: 6px;
+    padding: 0;
+    font-weight: 600;
+}
+
+.check-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
+.check-row label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+}
+
 /* ---------- 칩 · 상자 ---------- */
+
+.chip-easy {
+    background: var(--easy-bg);
+    color: var(--easy);
+    font-weight: 600;
+}
+
+.chip-hard {
+    background: var(--hard-bg);
+    color: var(--hard);
+    font-weight: 600;
+}
+
+.svc-row .chip { flex: none; }
+
 
 .chips {
     display: flex;
@@ -284,6 +340,8 @@ textarea {
 }
 
 .notice > :last-child { margin-bottom: 0; }
+
+.caution p { margin: 4px 0 0; }
 
 .caution {
     margin: 0 0 16px;
@@ -339,6 +397,11 @@ textarea {
     font-weight: 800;
     font-size: 1.05rem;
     line-height: 1;
+}
+
+img.svc-icon {
+    object-fit: cover;
+    background: var(--bg-soft);
 }
 
 .svc-icon-lg {

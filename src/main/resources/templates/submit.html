@@ -11,7 +11,7 @@
     <p class="lead">직접 해지해 본 방법을 글로 알려 주세요. 관리자가 확인한 뒤 가이드로 올려요.</p>
 
     <!-- 오류가 있으면 입력 칸에 aria-invalid와 오류 문구 id(aria-describedby)를 붙여 화면 낭독기가 함께 읽게 한다 -->
-    <form th:action="@{/submit}" th:object="${form}" method="post">
+    <form th:action="@{/submit}" th:object="${form}" method="post" enctype="multipart/form-data">
         <div class="field">
             <label for="serviceName">서비스 이름</label>
             <input type="text" id="serviceName" th:field="*{serviceName}" maxlength="50" placeholder="예: 유튜브 프리미엄"
@@ -32,8 +32,45 @@
             <p class="field-help" id="rawText-help">10자 이상 1000자 이하로 적어 주세요.</p>
         </div>
 
+        <details class="more" th:open="${#fields.hasErrors('channels') or #fields.hasErrors('caution') or #fields.hasErrors('iconFile')}">
+            <summary>더 알려 주실 수 있나요? (선택)</summary>
+
+            <fieldset class="field">
+                <legend>해지하는 곳</legend>
+                <div class="check-row">
+                    <label th:each="channel : ${T(com.whtngml.subscription_cancel_guide.domain.CancelChannel).values()}">
+                        <input type="checkbox" th:field="*{channels}" th:value="${channel}">
+                        <span th:text="${channel.label}">앱</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <div class="field">
+                <label for="caution">주의할 점</label>
+                <textarea id="caution" th:field="*{caution}" rows="3" maxlength="500"
+                          placeholder="예: 앱스토어로 결제했다면 앱스토어 구독 관리에서 해지해야 해요."
+                          th:attr="aria-invalid=${#fields.hasErrors('caution')} ? 'true' : null,
+                                   aria-describedby=${#fields.hasErrors('caution')} ? 'caution-error' : null"></textarea>
+                <p class="field-error" id="caution-error"
+                   th:if="${#fields.hasErrors('caution')}" th:errors="*{caution}">오류</p>
+            </div>
+
+            <div class="field">
+                <label for="iconFile">서비스 아이콘 이미지</label>
+                <input type="file" id="iconFile" name="iconFile" accept="image/png,image/jpeg,image/webp"
+                       th:attr="aria-invalid=${#fields.hasErrors('iconFile')} ? 'true' : null,
+                                aria-describedby=${#fields.hasErrors('iconFile')} ? 'iconFile-error iconFile-help' : 'iconFile-help'">
+                <p class="field-error" id="iconFile-error"
+                   th:if="${#fields.hasErrors('iconFile')}" th:errors="*{iconFile}">오류</p>
+                <p class="field-help" id="iconFile-help">PNG, JPEG, WebP · 200KB까지
+                    <th:block th:if="${aiSteps != null}"><br>미리보기를 하면 고른 아이콘이 지워져요. 다시 골라 주세요.</th:block>
+                </p>
+            </div>
+        </details>
+
         <input type="hidden" id="aiStepsJson" th:field="*{aiStepsJson}">
 
+        <div class="notice" role="alert" th:if="${uploadError != null}" th:text="${uploadError}">업로드 오류</div>
         <div class="notice" role="alert" th:if="${aiError != null}" th:text="${aiError}">AI 오류</div>
 
         <section id="aiPreview" th:if="${aiSteps != null}">

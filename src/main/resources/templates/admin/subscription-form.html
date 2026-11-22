@@ -5,6 +5,7 @@
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
 <main class="container">
+    <div class="alert alert-danger" th:if="${uploadError}" th:text="${uploadError}">업로드 오류</div>
     <a class="d-inline-block mb-2" th:href="@{/admin/guides}">← 가이드 관리</a>
 
     <h1 class="h3 mb-3" th:text="${subscription == null ? '새 서비스 등록' : subscription.name + ' 수정'}">서비스</h1>
@@ -13,7 +14,7 @@
 
     <form class="card card-body"
           th:action="${subscription == null} ? @{/admin/guides/new} : @{/admin/guides/{id}/edit(id=${subscription.id})}"
-          th:object="${form}" method="post">
+          th:object="${form}" method="post" enctype="multipart/form-data">
         <th:block th:replace="~{fragments/subscription-fields :: fields}"></th:block>
 
         <div class="d-flex gap-2">

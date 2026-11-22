@@ -5,6 +5,7 @@
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
 <main class="container">
+    <div class="alert alert-danger" th:if="${uploadError}" th:text="${uploadError}">업로드 오류</div>
     <a class="d-inline-block mb-2" th:href="@{/admin/submissions}">← 제보 검토</a>
 
     <h1 class="h3" th:text="${submission.serviceName} + ' 제보'">제보</h1>
@@ -18,6 +19,17 @@
         <div class="card-body">
             <h2 class="h5 card-title">제보 원문</h2>
             <p class="card-text pre-line" th:text="${submission.rawText}">해지 방법 글</p>
+            <p class="card-text mb-1" th:unless="${submission.channels.isEmpty()}">
+                <strong>해지하는 곳:</strong>
+                <span th:each="channel, stat : ${submission.channels}" th:text="${channel.label} + (${stat.last} ? '' : ' · ')">앱</span>
+            </p>
+            <p class="card-text mb-1" th:if="${submission.caution != null}">
+                <strong>주의할 점:</strong> <span th:text="${submission.caution}">주의</span>
+            </p>
+            <p class="card-text" th:if="${submission.icon != null}">
+                <strong>아이콘:</strong>
+                <img th:src="@{/admin/icons/{id}(id=${submission.icon.id})}" width="48" height="48" alt="제보한 아이콘" class="rounded border align-middle">
+            </p>
         </div>
     </section>
 
@@ -43,6 +55,14 @@
                         <input class="form-check-input" type="checkbox" id="importAiStepsExisting" name="importAiSteps" value="true">
                         <label class="form-check-label" for="importAiStepsExisting">기존 해지 단계를 지우고 AI 단계로 바꾸기</label>
                     </div>
+                    <div class="form-check mb-3" th:if="${submission.hasDetails()}">
+                        <input class="form-check-input" type="checkbox" id="importDetailsExisting" name="importDetails" value="true">
+                        <label class="form-check-label" for="importDetailsExisting">해지하는 곳·주의할 점을 제보 내용으로 바꾸기</label>
+                    </div>
+                    <div class="form-check mb-3" th:if="${submission.icon != null}">
+                        <input class="form-check-input" type="checkbox" id="importIconExisting" name="importIcon" value="true">
+                        <label class="form-check-label" for="importIconExisting">아이콘을 제보한 이미지로 바꾸기</label>
+                    </div>
                     <button class="btn btn-primary" type="submit" th:text="'\'' + ${sameName.name} + '\'(으)로 승인'">기존 서비스로 승인</button>
                 </form>
             </div>
@@ -52,11 +72,19 @@
             <h2 class="h5">새 서비스로 승인</h2>
             <p class="text-secondary">서비스 정보를 채우고 승인하면, 다음 화면에서 해지 단계를 입력해요.</p>
 
-            <form class="card card-body" th:action="@{/admin/submissions/{id}/approve(id=${submission.id})}" th:object="${form}" method="post">
+            <form class="card card-body" th:action="@{/admin/submissions/{id}/approve(id=${submission.id})}" th:object="${form}" method="post" enctype="multipart/form-data">
                 <th:block th:replace="~{fragments/subscription-fields :: fields}"></th:block>
                 <div class="form-check mb-3" th:unless="${aiSteps.isEmpty()}">
                     <input class="form-check-input" type="checkbox" id="importAiSteps" name="importAiSteps" value="true" checked>
                     <label class="form-check-label" for="importAiSteps">AI 단계를 해지 단계로 가져오기</label>
+                </div>
+                <div class="form-check mb-3" th:if="${submission.hasDetails()}">
+                    <input class="form-check-input" type="checkbox" id="importDetails" name="importDetails" value="true" checked>
+                    <label class="form-check-label" for="importDetails">해지하는 곳·주의할 점 가져오기</label>
+                </div>
+                <div class="form-check mb-3" th:if="${submission.icon != null}">
+                    <input class="form-check-input" type="checkbox" id="importIcon" name="importIcon" value="true" checked>
+                    <label class="form-check-label" for="importIcon">아이콘 가져오기 (위에서 새 아이콘을 올리면 그것을 써요)</label>
                 </div>
                 <div>
                     <button class="btn btn-primary" type="submit">새 서비스로 승인</button>

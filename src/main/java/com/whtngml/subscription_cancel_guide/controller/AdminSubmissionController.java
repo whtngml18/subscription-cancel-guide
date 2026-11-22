@@ -1,6 +1,9 @@
 package com.whtngml.subscription_cancel_guide.controller;
 
+import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Submission;
+import com.whtngml.subscription_cancel_guide.service.IconService;
+import com.whtngml.subscription_cancel_guide.service.IconValidationException;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
 import com.whtngml.subscription_cancel_guide.service.GuideAdminService;
@@ -27,6 +30,8 @@ import java.time.LocalDate;
 @RequestMapping("/admin/submissions")
 @RequiredArgsConstructor
 public class AdminSubmissionController {
+
+    private final IconService iconService;
 
     private static final int PAGE_SIZE = 10;
 
@@ -62,6 +67,8 @@ public class AdminSubmissionController {
                                @Valid @ModelAttribute("form") SubscriptionForm form,
                                BindingResult bindingResult,
                                @RequestParam(defaultValue = "false") boolean importAiSteps,
+                               @RequestParam(defaultValue = "false") boolean importDetails,
+                               @RequestParam(defaultValue = "false") boolean importIcon,
                                Model model,
                                RedirectAttributes redirectAttributes) {
         Submission submission = submissionService.getSubmission(id);
@@ -71,11 +78,20 @@ public class AdminSubmissionController {
         if (!bindingResult.hasFieldErrors("slug") && guideAdminService.isSlugTaken(form.getSlug(), null)) {
             bindingResult.rejectValue("slug", "duplicate", "이미 쓰고 있는 slug예요.");
         }
+        IconImage uploadedIcon = null;
+        if (!bindingResult.hasErrors()) {
+            try {
+                uploadedIcon = iconService.store(form.getIconFile()).orElse(null);
+            } catch (IconValidationException e) {
+                bindingResult.rejectValue("iconFile", "icon", e.getMessage());
+            }
+        }
         if (bindingResult.hasErrors()) {
             return showDetail(submission, model);
         }
 
-        Long subscriptionId = submissionService.approveAsNew(id, form, importAiSteps);
+        Long subscriptionId = submissionService.approveAsNew(id, form, uploadedIcon,
+                importAiSteps, importDetails, importIcon);
         redirectAttributes.addFlashAttribute("message", importAiSteps && submission.getAiStepsJson() != null
                 ? "제보를 승인하고 AI 단계를 가져왔어요. 제보 원문과 비교해서 고치세요."
                 : "제보를 승인했어요. 아래 제보 원문을 보고 해지 단계를 추가하세요.");
@@ -85,9 +101,11 @@ public class AdminSubmissionController {
     @PostMapping("/{id}/approve-existing")
     public String approveToExisting(@PathVariable Long id,
                                     @RequestParam(defaultValue = "false") boolean importAiSteps,
+                                    @RequestParam(defaultValue = "false") boolean importDetails,
+                                    @RequestParam(defaultValue = "false") boolean importIcon,
                                     RedirectAttributes redirectAttributes) {
         boolean hasAiSteps = submissionService.getSubmission(id).getAiStepsJson() != null;
-        Long subscriptionId = submissionService.approveToExisting(id, importAiSteps);
+        Long subscriptionId = submissionService.approveToExisting(id, importAiSteps, importDetails, importIcon);
         redirectAttributes.addFlashAttribute("message", importAiSteps && hasAiSteps
                 ? "기존 서비스로 승인하고 해지 단계를 AI 단계로 바꿨어요. 제보 원문과 비교해서 고치세요."
                 : "기존 서비스로 승인했어요. 제보 원문을 보고 해지 단계를 고치세요.");
