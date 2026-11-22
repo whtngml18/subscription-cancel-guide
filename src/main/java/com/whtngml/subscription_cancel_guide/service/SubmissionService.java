@@ -98,7 +98,7 @@ public class SubmissionService {
     @Transactional
     public Long approveAsNew(Long submissionId, SubscriptionForm form, boolean importAiSteps) {
         Submission submission = getPendingSubmission(submissionId);
-        Long subscriptionId = guideAdminService.createSubscription(form);
+        Long subscriptionId = guideAdminService.createSubscription(form, null);
         Subscription subscription = guideAdminService.getSubscription(subscriptionId);
         subscription.markAsUserSubmission();
         submission.approve(subscription);
