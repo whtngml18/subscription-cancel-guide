@@ -190,4 +190,18 @@ class AdminPagesTest {
         int start = html.lastIndexOf("<input", at);
         return html.substring(start, html.indexOf('>', at) + 1);
     }
+
+    @Test
+    void oldCssRemoved() throws Exception {
+        mvc.perform(get("/css/phone.css")).andExpect(status().isNotFound());
+        mvc.perform(get("/css/app.css")).andExpect(status().isNotFound());
+        try (var files = java.nio.file.Files.walk(java.nio.file.Path.of("src/main/resources"))) {
+            for (var file : files.filter(java.nio.file.Files::isRegularFile).filter(f -> f.toString().matches(".*[.](html|css|js|json|yaml)$")).toList()) {
+                String text = java.nio.file.Files.readString(file);
+                org.junit.jupiter.api.Assertions.assertFalse(
+                        text.contains("phone.css") || text.contains("app.css") || text.contains("bootstrap"),
+                        file + "에 옛 스타일 참조가 남아 있어요");
+            }
+        }
+    }
 }
