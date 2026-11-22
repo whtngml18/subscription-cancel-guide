@@ -3,6 +3,7 @@ package com.whtngml.subscription_cancel_guide.controller;
 import com.whtngml.subscription_cancel_guide.domain.GuideStep;
 import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
+import com.whtngml.subscription_cancel_guide.service.GuideListService;
 import com.whtngml.subscription_cancel_guide.service.IconService;
 import com.whtngml.subscription_cancel_guide.service.IconValidationException;
 import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -37,6 +39,7 @@ public class AdminGuideController {
     }
 
     private final IconService iconService;
+    private final GuideListService guideListService;
 
     private final SubscriptionRepository subscriptionRepository;
     private final CategoryRepository categoryRepository;
@@ -47,8 +50,14 @@ public class AdminGuideController {
     // ---------- 서비스 목록 ----------
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("subscriptions", subscriptionRepository.findAll(Sort.by("name")));
+    public String list(@RequestParam(defaultValue = "") String q, Model model) {
+        // 서비스가 수십 개 수준이라 전부 읽어 이름으로 거른다
+        String keyword = q.strip().toLowerCase();
+        model.addAttribute("subscriptions", subscriptionRepository.findAll(Sort.by("name")).stream()
+                .filter(s -> keyword.isEmpty() || s.getName().toLowerCase().contains(keyword))
+                .toList());
+        model.addAttribute("q", q.strip());
+        model.addAttribute("stepCounts", guideListService.stepCounts());
         model.addAttribute("feedbackCounts", feedbackService.countAllBySubscription());
         return "admin/guides";
     }

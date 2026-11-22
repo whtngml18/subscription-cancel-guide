@@ -68,4 +68,28 @@ class AdminPagesTest {
         mvc.perform(get("/admin/guides"))
                 .andExpect(content().string(not(containsString("class=\"badge\""))));
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void guidesListShowsMissingInfo() throws Exception {
+        mvc.perform(get("/admin/guides")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("missing-list")))
+                .andExpect(content().string(containsString("단계 수")))
+                .andExpect(content().string(containsString("<li>난이도</li>")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void guidesListSearch() throws Exception {
+        mvc.perform(get("/admin/guides").param("q", "넷"))
+                .andExpect(content().string(containsString("넷플릭스")))
+                .andExpect(content().string(not(containsString("멜론"))));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void guidesTableIsWrapped() throws Exception {
+        mvc.perform(get("/admin/guides"))
+                .andExpect(content().string(containsString("class=\"table-wrap\"")));
+    }
 }
