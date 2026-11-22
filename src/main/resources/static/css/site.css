@@ -534,7 +534,7 @@ img.svc-icon {
 .step {
     position: relative;
     display: grid;
-    grid-template-columns: 32px 1fr 50px;
+    grid-template-columns: 32px 1fr 120px;
     gap: 0 14px;
     padding-bottom: 24px;
 }
@@ -575,39 +575,59 @@ img.svc-icon {
     color: var(--muted);
 }
 
-/* 작은 휴대폰 도식: 화면 위쪽 막대(서비스 색)와 누를 곳(점) */
+/* 작은 휴대폰 도식: 화면 위쪽 막대(서비스 색), 화면 제목, 메뉴 5줄. 누를 줄만 서비스 색 */
 .mini-phone {
     --brand: var(--accent);
-    position: relative;
-    width: 50px;
-    aspect-ratio: 9 / 16;
+    width: 120px;
+    padding: 12px 6px 8px;
     border: 2px solid var(--text);
-    border-radius: 8px;
+    border-top-width: 8px;
+    border-top-color: var(--brand);
+    border-radius: 12px;
     background: var(--bg);
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.phone-title {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 800;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.mini-phone::before {
-    content: "";
-    position: absolute;
-    inset: 0 0 auto;
-    height: 9px;
+.phone-rows {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.phone-rows .row {
+    height: 18px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--muted);
+}
+
+.phone-rows .row-target {
     background: var(--brand);
+    color: #fff;
+    font-weight: 800;
 }
 
-.mini-phone .tap {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px rgb(31 79 168 / .25);
+.phone-rows .row-blank {
+    margin: 5px 0;
+    height: 8px;
+    padding: 0;
+    background: var(--line);
 }
-
-.pos-top-left .tap { top: 14px; left: 5px; }
-.pos-top-right .tap { top: 14px; right: 5px; }
-.pos-middle .tap { top: calc(50% - 6px); left: calc(50% - 6px); }
-.pos-bottom .tap { bottom: 6px; left: calc(50% - 6px); }
 
 /* 좁은 화면: 휴대폰 그림을 글 아래로 */
 @media (max-width: 399px) {
