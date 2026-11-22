@@ -3,26 +3,40 @@
 <body>
 <!--
   사용자 화면 부품
-  - serviceIcon(subscription): 서비스 아이콘. 브랜드 색 네모 + 이름 첫 글자 (색이 없으면 회색)
-  - serviceRow(subscription, stepCount): 목록 한 줄 (아이콘 · 이름 · 단계 수)
-  - missingInfo(name): 아직 없는 정보 자리. 제보 화면으로 보내는 링크
+  - serviceIcon(subscription): 서비스 아이콘. 올린 이미지가 있으면 이미지, 없으면 브랜드 색 네모 + 이름 첫 글자 (색이 없으면 회색)
+  - serviceRow(subscription, stepCount): 목록 한 줄 (아이콘 · 이름 · 해지하는 곳 · 단계 수 · 예상 시간 · 난이도)
+  - difficultyChip(difficulty): 난이도 색 칩
+  - missingInfo(name, field): 아직 없는 정보 자리. 제보 화면으로 보내는 링크 (field는 화면 낭독기용 항목 이름)
 -->
-<span th:fragment="serviceIcon(subscription)" class="svc-icon" aria-hidden="true"
-      th:style="${#strings.isEmpty(subscription.brandColor)} ? null : '--brand: ' + ${subscription.brandColor}"
-      th:text="${#strings.substring(subscription.name, 0, 1)}">넷</span>
+<th:block th:fragment="serviceIcon(subscription)">
+    <!-- icon.id만 읽으므로 이미지 행을 추가로 불러오지 않는다 -->
+    <img th:if="${subscription.icon != null}" class="svc-icon"
+         th:src="@{/icons/{id}(id=${subscription.icon.id})}" alt="" width="40" height="40" loading="lazy">
+    <span th:if="${subscription.icon == null}" class="svc-icon" aria-hidden="true"
+          th:style="${#strings.isEmpty(subscription.brandColor)} ? null : '--brand: ' + ${subscription.brandColor}"
+          th:text="${#strings.substring(subscription.name, 0, 1)}">넷</span>
+</th:block>
 
 <a th:fragment="serviceRow(subscription, stepCount)" class="svc-row"
    th:href="@{/guide/{slug}(slug=${subscription.slug})}">
-    <span th:replace="~{fragments/ui :: serviceIcon(${subscription})}"></span>
+    <th:block th:replace="~{fragments/ui :: serviceIcon(${subscription})}"></th:block>
     <span class="svc-text">
         <span class="svc-name" th:text="${subscription.name}">서비스 이름</span>
-        <span class="svc-meta" th:text="${stepCount > 0} ? ${stepCount} + '단계' : '단계 준비 중'">3단계</span>
+        <span class="svc-meta"
+              th:text="${T(com.whtngml.subscription_cancel_guide.dto.GuideSummary).rowMeta(subscription.channels, stepCount, subscription.estimatedMinutes)}">웹 · 3단계 · 약 3분</span>
     </span>
+    <th:block th:if="${subscription.difficulty != null}">
+        <span th:replace="~{fragments/ui :: difficultyChip(${subscription.difficulty})}"></span>
+    </th:block>
 </a>
 
-<p th:fragment="missingInfo(name)" class="missing">
+<span th:fragment="difficultyChip(difficulty)" class="chip"
+      th:classappend="'chip-' + ${#strings.toLowerCase(difficulty.name())}"
+      th:text="${difficulty.label}">쉬움</span>
+
+<p th:fragment="missingInfo(name, field)" class="missing">
     아직 확인된 정보가 없어요.
-    <a th:href="@{/submit(name=${name})}">알고 계시면 알려 주세요 →</a>
+    <a th:href="@{/submit(name=${name})}">알고 계시면 알려 주세요 →<span class="visually-hidden" th:text="' (' + ${field} + ')'"> (항목)</span></a>
 </p>
 </body>
 </html>
