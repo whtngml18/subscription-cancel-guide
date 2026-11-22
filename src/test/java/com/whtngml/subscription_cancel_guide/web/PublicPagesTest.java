@@ -123,6 +123,21 @@ class PublicPagesTest {
     }
 
     @Test
+    void submitErrorsAreLinkedToFields() throws Exception {
+        mvc.perform(post("/submit").param("serviceName", "").param("rawText", "짧음").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("aria-describedby=\"serviceName-error\"")))
+                .andExpect(content().string(containsString("id=\"serviceName-error\"")))
+                .andExpect(content().string(containsString("aria-invalid=\"true\"")));
+    }
+
+    @Test
+    void submitDoneOffersNextActions() throws Exception {
+        mvc.perform(get("/submit/done"))
+                .andExpect(content().string(containsString("다른 서비스 제보")));
+    }
+
+    @Test
     void guideShowsFeedbackCount() throws Exception {
         mvc.perform(post("/guide/netflix/feedback").param("helpful", "true").with(csrf()));
         mvc.perform(get("/guide/netflix"))
