@@ -1,9 +1,16 @@
 package com.whtngml.subscription_cancel_guide.web;
 
+import com.whtngml.subscription_cancel_guide.domain.CancelChannel;
 import com.whtngml.subscription_cancel_guide.domain.Category;
+import com.whtngml.subscription_cancel_guide.domain.Submission;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
+import com.whtngml.subscription_cancel_guide.repository.SubmissionRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
+import com.whtngml.subscription_cancel_guide.service.IconValidatorTest;
+import org.springframework.mock.web.MockMultipartFile;
+
+import java.util.EnumSet;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,9 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,6 +44,9 @@ class PublicPagesTest {
 
     @Autowired
     SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    SubmissionRepository submissionRepository;
 
     @Test
     void userPagesUseSiteCss() throws Exception {
@@ -130,6 +142,45 @@ class PublicPagesTest {
                 .andExpect(content().string(containsString("aria-describedby=\"serviceName-error\"")))
                 .andExpect(content().string(containsString("id=\"serviceName-error\"")))
                 .andExpect(content().string(containsString("aria-invalid=\"true\"")));
+    }
+
+    @Test
+    void submitSavesDetails() throws Exception {
+        mvc.perform(multipart("/submit")
+                        .file(new MockMultipartFile("iconFile", "w.png", "image/png", IconValidatorTest.PNG))
+                        .param("serviceName", "왓챠")
+                        .param("rawText", "설정에서 멤버십 해지를 눌러요.")
+                        .param("channels", "APP", "WEB")
+                        .param("caution", "스토어 결제는 스토어에서")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection());
+
+        Submission saved = submissionRepository.findAll().stream()
+                .filter(s -> s.getServiceName().equals("왓챠")).findFirst().orElseThrow();
+        assertEquals(EnumSet.of(CancelChannel.APP, CancelChannel.WEB), saved.getChannels());
+        assertEquals("스토어 결제는 스토어에서", saved.getCaution());
+        assertNotNull(saved.getIcon());
+    }
+
+    @Test
+    void submitRejectsSvgIcon() throws Exception {
+        long before = submissionRepository.count();
+        mvc.perform(multipart("/submit")
+                        .file(new MockMultipartFile("iconFile", "w.png", "image/png", IconValidatorTest.SVG))
+                        .param("serviceName", "왓챠")
+                        .param("rawText", "설정에서 멤버십 해지를 눌러요.")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("PNG, JPEG, WebP 이미지만")))
+                .andExpect(content().string(containsString("aria-describedby=\"iconFile-error iconFile-help\"")));
+        assertEquals(before, submissionRepository.count());
+    }
+
+    @Test
+    void submitPageHasMoreSection() throws Exception {
+        mvc.perform(get("/submit"))
+                .andExpect(content().string(containsString("더 알려 주실 수 있나요?")))
+                .andExpect(content().string(containsString("enctype=\"multipart/form-data\"")));
     }
 
     @Test

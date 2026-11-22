@@ -4,9 +4,12 @@ import com.whtngml.subscription_cancel_guide.ai.AiPreviewRateLimiter;
 import com.whtngml.subscription_cancel_guide.ai.AiStepsJson;
 import com.whtngml.subscription_cancel_guide.ai.StepParseException;
 import com.whtngml.subscription_cancel_guide.ai.StepParser;
+import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.dto.AiStep;
 import com.whtngml.subscription_cancel_guide.dto.AiStepsResult;
 import com.whtngml.subscription_cancel_guide.dto.SubmissionForm;
+import com.whtngml.subscription_cancel_guide.service.IconService;
+import com.whtngml.subscription_cancel_guide.service.IconValidationException;
 import com.whtngml.subscription_cancel_guide.service.SubmissionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -29,6 +32,7 @@ public class SubmissionController {
     private final StepParser stepParser;
     private final AiStepsJson aiStepsJson;
     private final AiPreviewRateLimiter rateLimiter;
+    private final IconService iconService;
 
     @ModelAttribute("aiAvailable")
     public boolean aiAvailable() {
@@ -73,12 +77,20 @@ public class SubmissionController {
 
     @PostMapping
     public String submit(@Valid @ModelAttribute("form") SubmissionForm form, BindingResult bindingResult) {
+        IconImage icon = null;
+        if (!bindingResult.hasErrors()) {
+            try {
+                icon = iconService.store(form.getIconFile()).orElse(null);
+            } catch (IconValidationException e) {
+                bindingResult.rejectValue("iconFile", "icon", e.getMessage());
+            }
+        }
         if (bindingResult.hasErrors()) {
             form.setAiStepsJson(null);
             return "submit";
         }
 
-        submissionService.submit(form);
+        submissionService.submit(form, icon);
         return "redirect:/submit/done";
     }
 

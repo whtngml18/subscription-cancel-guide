@@ -1,9 +1,14 @@
 package com.whtngml.subscription_cancel_guide.dto;
 
+import com.whtngml.subscription_cancel_guide.domain.CancelChannel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -19,4 +24,13 @@ public class SubmissionForm {
 
     // AI 미리보기 결과. 화면의 숨은 칸에 담아 두었다가 제출할 때 서버에서 다시 검사한다.
     private String aiStepsJson;
+
+    // ---------- 더 알려 주실 수 있나요? (모두 선택) ----------
+
+    private Set<CancelChannel> channels = EnumSet.noneOf(CancelChannel.class);
+
+    @Size(max = 500, message = "주의할 점은 500자까지 쓸 수 있어요.")
+    private String caution;
+
+    private MultipartFile iconFile;
 }

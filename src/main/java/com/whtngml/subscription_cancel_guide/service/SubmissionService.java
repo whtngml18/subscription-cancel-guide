@@ -2,7 +2,7 @@ package com.whtngml.subscription_cancel_guide.service;
 
 import com.whtngml.subscription_cancel_guide.ai.AiStepsJson;
 import com.whtngml.subscription_cancel_guide.ai.StepParseException;
-import com.whtngml.subscription_cancel_guide.domain.CancelChannel;
+import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Submission;
 import com.whtngml.subscription_cancel_guide.domain.SubmissionStatus;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,9 +36,10 @@ public class SubmissionService {
     private final AiStepsJson aiStepsJson;
 
     @Transactional
-    public Long submit(SubmissionForm form) {
+    public Long submit(SubmissionForm form, IconImage icon) {
+        String caution = form.getCaution() == null || form.getCaution().isBlank() ? null : form.getCaution().strip();
         Submission submission = new Submission(form.getServiceName().strip(), form.getRawText().strip(),
-                checkAiStepsJson(form.getAiStepsJson()), EnumSet.noneOf(CancelChannel.class), null, null);
+                checkAiStepsJson(form.getAiStepsJson()), form.getChannels(), caution, icon);
         return submissionRepository.save(submission).getId();
     }
 
