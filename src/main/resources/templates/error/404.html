@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: noindexHead('찾는 화면이 없어요 | 구독 해지 가이드')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: siteHeader(false)}"></header>
+
+<main class="wrap">
+    <h1>찾는 화면이 없어요</h1>
+    <p class="lead">주소가 바뀌었거나 아직 없는 가이드예요.</p>
+
+    <form class="hero-search" th:action="@{/search}" method="get" role="search">
+        <input type="search" name="q" placeholder="서비스 이름 검색" aria-label="서비스 이름 검색">
+        <button class="btn btn-primary btn-lg" type="submit">검색</button>
+    </form>
+
+    <p style="margin-top: 24px"><a class="btn btn-secondary" th:href="@{/}">홈으로</a></p>
+</main>
+
+<footer th:replace="~{fragments/layout :: siteFooter}"></footer>
+</body>
+</html>
