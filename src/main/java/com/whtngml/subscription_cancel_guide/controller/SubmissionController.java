@@ -11,6 +11,7 @@ import com.whtngml.subscription_cancel_guide.dto.SubmissionForm;
 import com.whtngml.subscription_cancel_guide.service.IconService;
 import com.whtngml.subscription_cancel_guide.service.IconValidationException;
 import com.whtngml.subscription_cancel_guide.service.SubmissionService;
+import com.whtngml.subscription_cancel_guide.service.SubmitRateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class SubmissionController {
     private final AiStepsJson aiStepsJson;
     private final AiPreviewRateLimiter rateLimiter;
     private final IconService iconService;
+    private final SubmitRateLimiter submitRateLimiter;
 
     @ModelAttribute("aiAvailable")
     public boolean aiAvailable() {
@@ -76,7 +78,13 @@ public class SubmissionController {
     }
 
     @PostMapping
-    public String submit(@Valid @ModelAttribute("form") SubmissionForm form, BindingResult bindingResult) {
+    public String submit(@Valid @ModelAttribute("form") SubmissionForm form, BindingResult bindingResult,
+                         HttpServletRequest request, Model model) {
+        if (!bindingResult.hasErrors() && !submitRateLimiter.tryAcquire(request.getRemoteAddr())) {
+            form.setAiStepsJson(null);
+            model.addAttribute("aiError", "제보는 1시간에 10번까지 보낼 수 있어요. 잠시 뒤 다시 보내 주세요.");
+            return "submit";
+        }
         IconImage icon = null;
         if (!bindingResult.hasErrors()) {
             try {

@@ -70,6 +70,7 @@
 
         <input type="hidden" id="aiStepsJson" th:field="*{aiStepsJson}">
 
+        <div class="notice" role="alert" th:if="${uploadError != null}" th:text="${uploadError}">업로드 오류</div>
         <div class="notice" role="alert" th:if="${aiError != null}" th:text="${aiError}">AI 오류</div>
 
         <section id="aiPreview" th:if="${aiSteps != null}">
