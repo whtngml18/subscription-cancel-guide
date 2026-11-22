@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: noindexHead(${subscription == null ? '새 서비스 등록' : subscription.name + ' 수정'} + ' | 구독 해지 가이드')}"></head>
+<head th:replace="~{fragments/layout :: adminHead(${subscription == null ? '새 서비스 등록' : subscription.name + ' 수정'} + ' | 구독 해지 가이드')}"></head>
 <body>
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
