@@ -53,6 +53,9 @@ class PublicPagesTest {
     @Autowired
     IconImageRepository iconImageRepository;
 
+    @Autowired
+    com.whtngml.subscription_cancel_guide.repository.GuideStepRepository guideStepRepository;
+
     @Test
     void userPagesUseSiteCss() throws Exception {
         mvc.perform(get("/")).andExpect(status().isOk())
@@ -228,5 +231,17 @@ class PublicPagesTest {
         mvc.perform(post("/guide/netflix/feedback").param("helpful", "true").with(csrf()));
         mvc.perform(get("/guide/netflix"))
                 .andExpect(content().string(containsString("1명 중 1명이 됐다고 했어요")));
+    }
+
+    @Test
+    void stepPictureShowsMenusAndTarget() throws Exception {
+        guideStepRepository.save(new com.whtngml.subscription_cancel_guide.domain.GuideStep(
+                subscriptionRepository.findBySlug("netflix").orElseThrow(),
+                9, "설정", "멤버십 해지", "bottom", null, "프로필"));
+
+        mvc.perform(get("/guide/netflix")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("row-target")))
+                .andExpect(content().string(containsString("프로필")))
+                .andExpect(content().string(containsString("설정 화면에서 멤버십 해지을(를) 누르세요")));
     }
 }

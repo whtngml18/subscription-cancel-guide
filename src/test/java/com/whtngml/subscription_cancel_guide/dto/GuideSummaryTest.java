@@ -19,7 +19,7 @@ class GuideSummaryTest {
     }
 
     private static GuideStep step(int order, String screen, String target) {
-        return new GuideStep(null, order, screen, target, "middle", null);
+        return new GuideStep(null, order, screen, target, "middle", null, null);
     }
 
     @Test

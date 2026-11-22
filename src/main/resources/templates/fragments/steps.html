@@ -4,7 +4,8 @@
 <!--
   해지 단계 목록: 번호 동그라미를 세로선으로 잇고, 단계마다 작은 휴대폰 그림으로 누를 곳을 보여 준다.
   - stepList(steps, color): steps는 GuideStep 또는 GuideStepForm 목록, color는 서비스 브랜드 색(#RRGGBB, 없으면 null)
-  - miniPhone(position, color): 작은 휴대폰 그림 하나 (관리자 단계 표·단계 폼 미리보기도 함께 쓴다)
+  - miniPhone(step, color): 작은 휴대폰 그림 하나. 화면 제목 + 메뉴 5줄(step.phoneRows), 누를 줄만 강조
+    (관리자 단계 표·단계 폼 미리보기도 함께 쓴다)
 -->
 <ol th:fragment="stepList(steps, color)" class="steps">
     <li class="step" th:each="step : ${steps}">
@@ -16,15 +17,20 @@
             </h3>
             <p th:if="${!#strings.isEmpty(step.description)}" th:text="${step.description}">설명</p>
         </div>
-        <div th:replace="~{fragments/steps :: miniPhone(${step.position}, ${color})}"></div>
+        <div th:replace="~{fragments/steps :: miniPhone(${step}, ${color})}"></div>
     </li>
 </ol>
 
-<!-- 실제 앱 화면처럼 보이지 않도록 누를 위치만 점으로 표시 -->
-<div th:fragment="miniPhone(position, color)" class="mini-phone" aria-hidden="true"
-     th:classappend="${#strings.isEmpty(position)} ? 'pos-middle' : 'pos-' + ${position}"
+<!-- 실제 앱 화면처럼 보이지 않도록 단순한 목록으로만 그린다. 회색 줄은 이름을 모르는 메뉴 -->
+<div th:fragment="miniPhone(step, color)" class="mini-phone" role="img"
+     th:attr="aria-label=${step.screenName ?: ''} + ' 화면에서 ' + ${step.targetLabel ?: ''} + '을(를) 누르세요'"
      th:style="${#strings.isEmpty(color)} ? null : '--brand: ' + ${color}">
-    <span class="tap"></span>
+    <span class="phone-title" aria-hidden="true" th:text="${step.screenName}">화면</span>
+    <ul class="phone-rows" aria-hidden="true">
+        <li th:each="row : ${step.phoneRows}"
+            th:class="${row.target} ? 'row row-target' : (${row.label} == null ? 'row row-blank' : 'row')"
+            th:text="${row.target} ? '> ' + ${row.label} : ${row.label}"></li>
+    </ul>
 </div>
 </body>
 </html>

@@ -124,7 +124,8 @@ public class GuideAdminService {
                 form.getScreenName(),
                 form.getTargetLabel(),
                 form.getPosition(),
-                form.getDescription()
+                form.getDescription(),
+                form.getOtherMenus()
         );
         guideStepRepository.save(step);
     }
@@ -144,7 +145,8 @@ public class GuideAdminService {
                 form.getScreenName(),
                 form.getTargetLabel(),
                 form.getPosition(),
-                form.getDescription()
+                form.getDescription(),
+                form.getOtherMenus()
         );
     }
 

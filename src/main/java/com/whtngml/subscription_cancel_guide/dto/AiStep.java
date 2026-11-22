@@ -1,7 +1,10 @@
 package com.whtngml.subscription_cancel_guide.dto;
 
+import java.util.List;
+
 // AI가 나눈 해지 단계 하나. position은 top-left, top-right, middle, bottom 중 하나.
-public record AiStep(int order, String screen, String target, String position) {
+// otherMenus는 그 화면에 보이는 다른 메뉴(글에 나온 이름만).
+public record AiStep(int order, String screen, String target, String position, List<String> otherMenus) {
 
     // 휴대폰 도식(fragments/phone)과 단계 저장에 쓰는 폼으로 바꾼다
     public GuideStepForm toForm() {
@@ -10,6 +13,7 @@ public record AiStep(int order, String screen, String target, String position) {
         form.setScreenName(screen);
         form.setTargetLabel(target);
         form.setPosition(position);
+        form.setOtherMenus(otherMenus == null || otherMenus.isEmpty() ? null : String.join("\n", otherMenus));
         return form;
     }
 }

@@ -3,6 +3,8 @@ package com.whtngml.subscription_cancel_guide.web;
 import com.whtngml.subscription_cancel_guide.domain.CancelChannel;
 import com.whtngml.subscription_cancel_guide.domain.Difficulty;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
+import com.whtngml.subscription_cancel_guide.domain.GuideStep;
+import com.whtngml.subscription_cancel_guide.repository.GuideStepRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
 import com.whtngml.subscription_cancel_guide.service.IconValidatorTest;
 import jakarta.persistence.EntityManager;
@@ -19,11 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.EnumSet;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,6 +48,9 @@ class AdminGuideFormTest {
 
     @Autowired
     EntityManager entityManager;
+
+    @Autowired
+    GuideStepRepository guideStepRepository;
 
     private Subscription netflix() {
         return subscriptionRepository.findBySlug("netflix").orElseThrow();
@@ -111,5 +120,47 @@ class AdminGuideFormTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("PNG, JPEG, WebP 이미지만")));
         assertNull(reload().getIcon());
+    }
+
+    private java.util.Optional<GuideStep> stepNine() {
+        entityManager.flush();
+        entityManager.clear();
+        return guideStepRepository.findAllBySubscriptionOrderByStepOrderAsc(netflix()).stream()
+                .filter(step -> step.getStepOrder() == 9).findFirst();
+    }
+
+    @Test
+    void savesStepOtherMenus() throws Exception {
+        mvc.perform(post("/admin/guides/{id}/steps/new", netflix().getId())
+                        .param("stepOrder", "9")
+                        .param("screenName", "설정")
+                        .param("targetLabel", "멤버십 해지")
+                        .param("position", "bottom")
+                        .param("otherMenus", "프로필\n알림")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection());
+
+        assertEquals("프로필\n알림", stepNine().orElseThrow().getOtherMenus());
+    }
+
+    @Test
+    void rejectsTooLongOtherMenus() throws Exception {
+        mvc.perform(post("/admin/guides/{id}/steps/new", netflix().getId())
+                        .param("stepOrder", "9")
+                        .param("screenName", "설정")
+                        .param("targetLabel", "멤버십 해지")
+                        .param("otherMenus", "가".repeat(301))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("다른 메뉴는 300자까지 쓸 수 있어요.")));
+
+        assertTrue(stepNine().isEmpty());
+    }
+
+    @Test
+    void newStepPreviewHasNoNull() throws Exception {
+        mvc.perform(get("/admin/guides/{id}/steps/new", netflix().getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("null"))));
     }
 }

@@ -10,6 +10,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class GuideStepForm {
@@ -33,6 +35,14 @@ public class GuideStepForm {
     @Size(max = 500, message = "설명은 500자까지 쓸 수 있어요.")
     private String description;
 
+    @Size(max = 300, message = "다른 메뉴는 300자까지 쓸 수 있어요.")
+    private String otherMenus;
+
+    // 브라우저는 줄바꿈을 \r\n(2자)으로 보내지만 maxlength는 1자로 센다. LF로 맞춰야 300자 검사가 화면과 같아진다.
+    public void setOtherMenus(String otherMenus) {
+        this.otherMenus = otherMenus == null ? null : otherMenus.replace("\r\n", "\n").replace('\r', '\n');
+    }
+
     public static GuideStepForm from(GuideStep step) {
         GuideStepForm form = new GuideStepForm();
         form.setStepOrder(step.getStepOrder());
@@ -40,6 +50,11 @@ public class GuideStepForm {
         form.setTargetLabel(step.getTargetLabel());
         form.setPosition(step.getPosition());
         form.setDescription(step.getDescription());
+        form.setOtherMenus(step.getOtherMenus());
         return form;
+    }
+
+    public List<PhoneRows.PhoneRow> getPhoneRows() {
+        return PhoneRows.of(position, targetLabel, otherMenus);
     }
 }
