@@ -37,7 +37,8 @@ public class GuideController {
 
         model.addAttribute("subscription", subscription);
         model.addAttribute("steps", steps);
-        model.addAttribute("summary", GuideSummary.of(steps));
+        model.addAttribute("summary", GuideSummary.of(steps, subscription.getChannels()));
+        model.addAttribute("channelText", GuideSummary.channelText(subscription.getChannels()));
         model.addAttribute("feedbackCount", feedbackService.countFor(subscription));
         model.addAttribute("howTo", howTo(subscription, steps));
         return "guide";

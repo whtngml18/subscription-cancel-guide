@@ -298,6 +298,21 @@ fieldset.field legend {
 
 /* ---------- 칩 · 상자 ---------- */
 
+.chip-easy {
+    background: var(--easy-bg);
+    color: var(--easy);
+    font-weight: 600;
+}
+
+.chip-hard {
+    background: var(--hard-bg);
+    color: var(--hard);
+    font-weight: 600;
+}
+
+.svc-row .chip { flex: none; }
+
+
 .chips {
     display: flex;
     flex-wrap: wrap;
@@ -325,6 +340,8 @@ fieldset.field legend {
 }
 
 .notice > :last-child { margin-bottom: 0; }
+
+.caution p { margin: 4px 0 0; }
 
 .caution {
     margin: 0 0 16px;
@@ -380,6 +397,11 @@ fieldset.field legend {
     font-weight: 800;
     font-size: 1.05rem;
     line-height: 1;
+}
+
+img.svc-icon {
+    object-fit: cover;
+    background: var(--bg-soft);
 }
 
 .svc-icon-lg {

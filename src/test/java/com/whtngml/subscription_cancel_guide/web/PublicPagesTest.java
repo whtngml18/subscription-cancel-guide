@@ -2,9 +2,11 @@ package com.whtngml.subscription_cancel_guide.web;
 
 import com.whtngml.subscription_cancel_guide.domain.CancelChannel;
 import com.whtngml.subscription_cancel_guide.domain.Category;
+import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Submission;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
+import com.whtngml.subscription_cancel_guide.repository.IconImageRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubmissionRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
 import com.whtngml.subscription_cancel_guide.service.IconValidatorTest;
@@ -47,6 +49,9 @@ class PublicPagesTest {
 
     @Autowired
     SubmissionRepository submissionRepository;
+
+    @Autowired
+    IconImageRepository iconImageRepository;
 
     @Test
     void userPagesUseSiteCss() throws Exception {
@@ -111,20 +116,55 @@ class PublicPagesTest {
     void guideShowsSummaryFirstAndStepsOnce() throws Exception {
         mvc.perform(get("/guide/netflix")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("넷플릭스 해지 방법")))
-                .andExpect(content().string(containsString("3단계로 해지할 수 있어요.")))
+                .andExpect(content().string(containsString("웹에서 3단계로 해지할 수 있어요.")))
                 .andExpect(content().string(containsString("class=\"steps\"")))
                 .andExpect(content().string(not(containsString("phone-list"))))
                 .andExpect(content().string(containsString("aria-label=\"위치\"")))
-                .andExpect(content().string(containsString("/submit?name=")))          // 빈 정보 칸
                 .andExpect(content().string(containsString("application/ld+json")));   // SEO 유지
     }
 
     @Test
     void refundInfoHidesMissingNotice() throws Exception {
-        // 넷플릭스는 환불 정보가 있으므로 "아직 확인된 정보가 없어요"는 해지하는 곳 한 군데만
-        String html = mvc.perform(get("/guide/netflix")).andReturn().getResponse().getContentAsString();
-        assertTrue(html.contains("해지해도 다음 결제일 전까지 이용할 수 있어요."));
-        assertEquals(1, html.split("아직 확인된 정보가 없어요", -1).length - 1);
+        // 멜론은 환불 정보만 있으므로 "아직 확인된 정보가 없어요"는 해지하는 곳, 난이도·시간 두 군데만
+        String html = mvc.perform(get("/guide/melon")).andReturn().getResponse().getContentAsString();
+        assertTrue(html.contains("해지하면 다음 결제일부터 요금이 나가지 않아요."));
+        assertEquals(2, html.split("아직 확인된 정보가 없어요", -1).length - 1);
+    }
+
+    @Test
+    void guideShowsNewDetails() throws Exception {
+        mvc.perform(get("/guide/netflix")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("쉬움")))
+                .andExpect(content().string(containsString("chip-easy")))
+                .andExpect(content().string(containsString("약 3분")))
+                .andExpect(content().string(containsString("공식 해지 페이지 열기")))
+                .andExpect(content().string(containsString("rel=\"noopener noreferrer\"")))
+                .andExpect(content().string(containsString("앱스토어나 구글플레이로 결제했다면")));
+    }
+
+    @Test
+    void guideWithoutDetailsShowsMissing() throws Exception {
+        mvc.perform(get("/guide/melon")).andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("class=\"caution\""))))
+                .andExpect(content().string(not(containsString("공식 해지 페이지 열기"))))
+                .andExpect(content().string(containsString("아직 확인된 정보가 없어요")));
+    }
+
+    @Test
+    void homeRowShowsDetails() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(content().string(containsString("웹 · 3단계 · 약 3분")))
+                .andExpect(content().string(containsString("앱·웹 · 단계 준비 중 · 약 5분")));
+    }
+
+    @Test
+    void uploadedIconShownOnHome() throws Exception {
+        IconImage icon = iconImageRepository.save(new IconImage(IconValidatorTest.PNG, "image/png"));
+        subscriptionRepository.findBySlug("netflix").orElseThrow().changeIcon(icon);
+        subscriptionRepository.flush();
+        mvc.perform(get("/"))
+                .andExpect(content().string(containsString("src=\"/icons/" + icon.getId() + "\"")))
+                .andExpect(content().string(containsString("<img class=\"svc-icon\"")));
     }
 
     @Test
