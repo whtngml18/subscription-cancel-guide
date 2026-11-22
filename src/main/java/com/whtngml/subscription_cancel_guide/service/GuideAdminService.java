@@ -2,6 +2,7 @@ package com.whtngml.subscription_cancel_guide.service;
 
 import com.whtngml.subscription_cancel_guide.domain.Category;
 import com.whtngml.subscription_cancel_guide.domain.GuideStep;
+import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Submission;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
@@ -45,7 +46,7 @@ public class GuideAdminService {
     }
 
     @Transactional
-    public Long createSubscription(SubscriptionForm form) {
+    public Long createSubscription(SubscriptionForm form, IconImage icon) {
         Subscription subscription = new Subscription(
                 getCategory(form.getCategoryId()),
                 form.getName(),
@@ -54,11 +55,12 @@ public class GuideAdminService {
                 form.getRefundInfo(),
                 form.getVerifiedAt()
         );
+        applyDetails(subscription, form, icon);
         return subscriptionRepository.save(subscription).getId();
     }
 
     @Transactional
-    public void updateSubscription(Long id, SubscriptionForm form) {
+    public void updateSubscription(Long id, SubscriptionForm form, IconImage icon) {
         Subscription subscription = getSubscription(id);
         subscription.update(
                 getCategory(form.getCategoryId()),
@@ -68,6 +70,20 @@ public class GuideAdminService {
                 form.getRefundInfo(),
                 form.getVerifiedAt()
         );
+        applyDetails(subscription, form, icon);
+    }
+
+    // 해지 정보 칸. 빈 글자는 null로 저장하고, 새 아이콘이 없으면 지금 아이콘을 그대로 둔다.
+    private void applyDetails(Subscription subscription, SubscriptionForm form, IconImage icon) {
+        subscription.updateDetails(form.getChannels(), blankToNull(form.getCaution()), form.getDifficulty(),
+                blankToNull(form.getOfficialCancelUrl()), form.getEstimatedMinutes());
+        if (icon != null) {
+            subscription.changeIcon(icon);
+        }
+    }
+
+    private static String blankToNull(String text) {
+        return text == null || text.isBlank() ? null : text.strip();
     }
 
     @Transactional

@@ -1,7 +1,10 @@
 package com.whtngml.subscription_cancel_guide.controller;
 
 import com.whtngml.subscription_cancel_guide.domain.GuideStep;
+import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
+import com.whtngml.subscription_cancel_guide.service.IconService;
+import com.whtngml.subscription_cancel_guide.service.IconValidationException;
 import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
@@ -26,6 +29,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin/guides")
 @RequiredArgsConstructor
 public class AdminGuideController {
+
+    private final IconService iconService;
 
     private final SubscriptionRepository subscriptionRepository;
     private final CategoryRepository categoryRepository;
@@ -58,11 +63,12 @@ public class AdminGuideController {
                                      RedirectAttributes redirectAttributes) {
         checkCategory(form, bindingResult);
         checkSlug(form, null, bindingResult);
+        IconImage icon = storeIcon(form, bindingResult);
         if (bindingResult.hasErrors()) {
             return showSubscriptionForm(null, model);
         }
 
-        Long id = guideAdminService.createSubscription(form);
+        Long id = guideAdminService.createSubscription(form, icon);
         redirectAttributes.addFlashAttribute("message", "서비스를 등록했어요. 이제 해지 단계를 추가하세요.");
         return "redirect:/admin/guides/" + id + "/edit";
     }
@@ -85,11 +91,12 @@ public class AdminGuideController {
         Subscription subscription = guideAdminService.getSubscription(id);
         checkCategory(form, bindingResult);
         checkSlug(form, id, bindingResult);
+        IconImage icon = storeIcon(form, bindingResult);
         if (bindingResult.hasErrors()) {
             return showSubscriptionForm(subscription, model);
         }
 
-        guideAdminService.updateSubscription(id, form);
+        guideAdminService.updateSubscription(id, form, icon);
         redirectAttributes.addFlashAttribute("message", "서비스 정보를 저장했어요.");
         return "redirect:/admin/guides/" + id + "/edit";
     }
@@ -187,6 +194,19 @@ public class AdminGuideController {
         model.addAttribute("subscription", subscription);
         model.addAttribute("stepId", stepId);
         return "admin/step-form";
+    }
+
+    // 다른 칸에 오류가 없을 때만 아이콘을 저장한다. 규칙에 맞지 않으면 아이콘 칸 오류로 보여 준다.
+    private IconImage storeIcon(SubscriptionForm form, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return null;
+        }
+        try {
+            return iconService.store(form.getIconFile()).orElse(null);
+        } catch (IconValidationException e) {
+            bindingResult.rejectValue("iconFile", "icon", e.getMessage());
+            return null;
+        }
     }
 
     private void checkCategory(SubscriptionForm form, BindingResult bindingResult) {

@@ -52,7 +52,7 @@
             <h2 class="h5">새 서비스로 승인</h2>
             <p class="text-secondary">서비스 정보를 채우고 승인하면, 다음 화면에서 해지 단계를 입력해요.</p>
 
-            <form class="card card-body" th:action="@{/admin/submissions/{id}/approve(id=${submission.id})}" th:object="${form}" method="post">
+            <form class="card card-body" th:action="@{/admin/submissions/{id}/approve(id=${submission.id})}" th:object="${form}" method="post" enctype="multipart/form-data">
                 <th:block th:replace="~{fragments/subscription-fields :: fields}"></th:block>
                 <div class="form-check mb-3" th:unless="${aiSteps.isEmpty()}">
                     <input class="form-check-input" type="checkbox" id="importAiSteps" name="importAiSteps" value="true" checked>

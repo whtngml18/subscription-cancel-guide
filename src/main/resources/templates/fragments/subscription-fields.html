@@ -45,6 +45,55 @@
         <label class="form-label" for="verifiedAt">마지막 확인일</label>
         <input class="form-control" type="date" id="verifiedAt" th:field="*{verifiedAt}">
     </div>
+    <h2 class="h6 mt-4 mb-3 border-top pt-3">해지 정보</h2>
+
+    <div class="mb-3">
+        <span class="form-label d-block">해지하는 곳</span>
+        <div class="form-check form-check-inline" th:each="channel : ${T(com.whtngml.subscription_cancel_guide.domain.CancelChannel).values()}">
+            <input class="form-check-input" type="checkbox" th:field="*{channels}" th:value="${channel}">
+            <label class="form-check-label" th:for="${#ids.prev('channels')}" th:text="${channel.label}">앱</label>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="caution">주의할 점</label>
+        <textarea class="form-control" th:errorclass="is-invalid" id="caution" th:field="*{caution}" rows="2" maxlength="500"
+                  placeholder="앱스토어로 결제했다면 앱스토어에서 해지해야 해요."></textarea>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('caution')}" th:errors="*{caution}">오류</div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-sm-4">
+            <label class="form-label" for="difficulty">난이도</label>
+            <select class="form-select" id="difficulty" th:field="*{difficulty}">
+                <option value="">선택 안 함</option>
+                <option th:each="d : ${T(com.whtngml.subscription_cancel_guide.domain.Difficulty).values()}"
+                        th:value="${d}" th:text="${d.label}">쉬움</option>
+            </select>
+        </div>
+        <div class="col-sm-4">
+            <label class="form-label" for="estimatedMinutes">예상 시간 (분)</label>
+            <input class="form-control" th:errorclass="is-invalid" type="number" min="1" max="120" id="estimatedMinutes" th:field="*{estimatedMinutes}">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('estimatedMinutes')}" th:errors="*{estimatedMinutes}">오류</div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="officialCancelUrl">공식 해지 링크</label>
+        <input class="form-control" th:errorclass="is-invalid" type="url" id="officialCancelUrl" th:field="*{officialCancelUrl}" placeholder="https://">
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('officialCancelUrl')}" th:errors="*{officialCancelUrl}">오류</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="iconFile">아이콘 (PNG, JPEG, WebP · 200KB까지)</label>
+        <div class="d-flex align-items-center gap-3">
+            <img th:if="${subscription != null and subscription.icon != null}"
+                 th:src="@{/admin/icons/{id}(id=${subscription.icon.id})}" width="48" height="48" alt="현재 아이콘" class="rounded border">
+            <input class="form-control" th:classappend="${#fields.hasErrors('iconFile')} ? 'is-invalid'" type="file" id="iconFile" name="iconFile"
+                   accept="image/png,image/jpeg,image/webp">
+        </div>
+        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('iconFile')}" th:errors="*{iconFile}">오류</div>
+    </div>
 </th:block>
 </body>
 </html>

@@ -1,6 +1,10 @@
 package com.whtngml.subscription_cancel_guide.dto;
 
+import com.whtngml.subscription_cancel_guide.domain.CancelChannel;
+import com.whtngml.subscription_cancel_guide.domain.Difficulty;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -8,8 +12,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.EnumSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -36,6 +43,26 @@ public class SubscriptionForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate verifiedAt;
 
+    // ---------- 해지 정보 ----------
+
+    private Set<CancelChannel> channels = EnumSet.noneOf(CancelChannel.class);
+
+    @Size(max = 500, message = "주의할 점은 500자까지 쓸 수 있어요.")
+    private String caution;
+
+    private Difficulty difficulty;
+
+    @Size(max = 500, message = "공식 해지 링크는 500자까지 쓸 수 있어요.")
+    @Pattern(regexp = "^(https?://[!-~]+)?$", message = "공식 해지 링크는 https://로 시작하는 주소로 써 주세요.")
+    private String officialCancelUrl;
+
+    @Min(value = 1, message = "예상 시간은 1분에서 120분 사이로 써 주세요.")
+    @Max(value = 120, message = "예상 시간은 1분에서 120분 사이로 써 주세요.")
+    private Integer estimatedMinutes;
+
+    // 새 아이콘 (고르지 않으면 지금 아이콘을 그대로 둔다)
+    private MultipartFile iconFile;
+
     public static SubscriptionForm from(Subscription subscription) {
         SubscriptionForm form = new SubscriptionForm();
         form.setCategoryId(subscription.getCategory().getId());
@@ -44,6 +71,12 @@ public class SubscriptionForm {
         form.setBrandColor(subscription.getBrandColor());
         form.setRefundInfo(subscription.getRefundInfo());
         form.setVerifiedAt(subscription.getVerifiedAt());
+        form.setChannels(subscription.getChannels().isEmpty()
+                ? EnumSet.noneOf(CancelChannel.class) : EnumSet.copyOf(subscription.getChannels()));
+        form.setCaution(subscription.getCaution());
+        form.setDifficulty(subscription.getDifficulty());
+        form.setOfficialCancelUrl(subscription.getOfficialCancelUrl());
+        form.setEstimatedMinutes(subscription.getEstimatedMinutes());
         return form;
     }
 }
