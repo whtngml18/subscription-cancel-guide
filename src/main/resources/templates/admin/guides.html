@@ -4,38 +4,68 @@
 <body>
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
-<main class="container">
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <h1 class="h3 mb-0 me-auto">가이드 관리</h1>
-        <a class="btn btn-outline-primary" th:href="@{/admin/submissions}" th:text="'제보 검토 (' + ${pendingCount} + '건)'">제보 검토 (0건)</a>
-        <a class="btn btn-primary" th:href="@{/admin/guides/new}">+ 새 서비스 등록</a>
+<main class="wrap-wide">
+    <div class="page-bar">
+        <h1>가이드 관리</h1>
+        <form th:action="@{/admin/guides}" method="get" role="search">
+            <input type="search" name="q" th:value="${q}" placeholder="서비스 이름 검색" aria-label="서비스 이름 검색">
+            <button class="btn btn-secondary btn-sm" type="submit">검색</button>
+        </form>
+        <a class="btn btn-primary btn-sm" th:href="@{/admin/guides/new}">+ 새 서비스</a>
     </div>
 
-    <div class="alert alert-success" th:if="${message}" th:text="${message}">알림</div>
+    <p class="alert-success" th:if="${message}" th:text="${message}">알림</p>
 
-    <p class="text-secondary" th:if="${subscriptions.isEmpty()}">등록된 서비스가 없어요.</p>
+    <p class="muted" th:if="${subscriptions.isEmpty() and #strings.isEmpty(q)}">등록된 서비스가 없어요.</p>
+    <p class="muted" th:if="${subscriptions.isEmpty() and !#strings.isEmpty(q)}"
+       th:text="'\'' + ${q} + '\'에 맞는 서비스가 없어요.'">맞는 서비스가 없어요.</p>
 
-    <div class="table-responsive" th:unless="${subscriptions.isEmpty()}">
-        <table class="table table-hover align-middle bg-white">
+    <div class="table-wrap" th:unless="${subscriptions.isEmpty()}">
+        <table class="admin-table">
             <thead>
             <tr>
                 <th scope="col">서비스</th>
                 <th scope="col">카테고리</th>
+                <th scope="col">난이도</th>
+                <th scope="col">단계 수</th>
+                <th scope="col">빈 정보</th>
                 <th scope="col">피드백</th>
+                <th scope="col">확인일</th>
                 <th scope="col"><span class="visually-hidden">관리</span></th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="subscription : ${subscriptions}">
-                <td th:text="${subscription.name}">서비스 이름</td>
+            <tr th:each="subscription : ${subscriptions}"
+                th:with="stepCount=${stepCounts[subscription.id] ?: 0},
+                         missing=${T(com.whtngml.subscription_cancel_guide.dto.MissingInfo).of(subscription, stepCount)},
+                         count=${feedbackCounts.get(subscription.id)}">
+                <td>
+                    <span class="svc-cell">
+                        <th:block th:replace="~{fragments/ui :: serviceIcon(${subscription})}"></th:block>
+                        <span th:text="${subscription.name}">서비스 이름</span>
+                    </span>
+                </td>
                 <td th:text="${subscription.category.name}">카테고리</td>
-                <td class="text-nowrap" th:with="count=${feedbackCounts.get(subscription.id)}"
-                    th:text="${count == null}
-                              ? '피드백 없음'
-                              : '맞았어요 ' + ${count.helpful} + ' · 달라요 ' + ${count.notHelpful}">맞았어요 0 · 달라요 0</td>
-                <td class="text-end text-nowrap">
-                    <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">수정</a>
-                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/guide/{slug}(slug=${subscription.slug})}">사이트에서 보기</a>
+                <td>
+                    <th:block th:if="${subscription.difficulty != null}">
+                        <span th:replace="~{fragments/ui :: difficultyChip(${subscription.difficulty})}"></span>
+                    </th:block>
+                    <th:block th:if="${subscription.difficulty == null}">—</th:block>
+                </td>
+                <td th:text="${stepCount}">3</td>
+                <td>
+                    <ul class="missing-list" th:unless="${missing.isEmpty()}">
+                        <li th:each="item : ${missing}" th:text="${item}">난이도</li>
+                    </ul>
+                    <th:block th:if="${missing.isEmpty()}">—</th:block>
+                </td>
+                <td class="muted" style="white-space: nowrap"
+                    th:text="${count == null} ? '—' : '맞았어요 ' + ${count.helpful} + ' · 달라요 ' + ${count.notHelpful}">—</td>
+                <td th:text="${subscription.verifiedAt == null} ? '—' : ${#temporals.format(subscription.verifiedAt, 'M.d')}">11.12</td>
+                <td class="actions">
+                    <a class="btn btn-secondary btn-sm" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">수정</a>
+                    <a class="btn btn-sm" th:href="@{/guide/{slug}(slug=${subscription.slug})}"
+                       th:attr="aria-label=${subscription.name} + ' 사이트에서 보기'">보기 ↗</a>
                 </td>
             </tr>
             </tbody>
