@@ -4,6 +4,7 @@ import com.whtngml.subscription_cancel_guide.domain.Category;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
+import com.whtngml.subscription_cancel_guide.service.GuideListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,7 @@ public class CategoryController {
 
     private final CategoryRepository categoryRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final GuideListService guideListService;
 
     @GetMapping("/category/{slug}")
     public String category(@PathVariable String slug,
@@ -42,6 +44,7 @@ public class CategoryController {
 
         model.addAttribute("category", category);
         model.addAttribute("page", result);
+        model.addAttribute("stepCounts", guideListService.stepCounts());
         return "category";
     }
 }
