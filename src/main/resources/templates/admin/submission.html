@@ -5,6 +5,7 @@
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
 <main class="container">
+    <div class="alert alert-danger" th:if="${uploadError}" th:text="${uploadError}">업로드 오류</div>
     <a class="d-inline-block mb-2" th:href="@{/admin/submissions}">← 제보 검토</a>
 
     <h1 class="h3" th:text="${submission.serviceName} + ' 제보'">제보</h1>
