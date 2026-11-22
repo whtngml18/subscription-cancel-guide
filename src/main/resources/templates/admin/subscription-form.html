@@ -57,7 +57,7 @@
                             <span th:text="${step.screenName}">화면</span>에서 <b th:text="${step.targetLabel}">버튼</b>
                             <div class="muted" th:if="${step.description != null}" th:text="${step.description}">설명</div>
                         </td>
-                        <td><div th:replace="~{fragments/steps :: miniPhone(${step.position}, ${subscription.brandColor})}"></div></td>
+                        <td><div th:replace="~{fragments/steps :: miniPhone(${step}, ${subscription.brandColor})}"></div></td>
                         <td class="actions">
                             <a class="btn btn-secondary btn-sm"
                                th:href="@{/admin/guides/{id}/steps/{stepId}/edit(id=${subscription.id}, stepId=${step.id})}">수정</a>
