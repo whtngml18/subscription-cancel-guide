@@ -119,6 +119,7 @@ class PublicPagesTest {
     void guideWithoutSteps() throws Exception {
         mvc.perform(get("/guide/tving")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("아직 등록된 해지 단계가 없어요.")))
+                .andExpect(content().string(not(containsString("0단계"))))
                 .andExpect(content().string(not(containsString("application/ld+json"))));
     }
 
