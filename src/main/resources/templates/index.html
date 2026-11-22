@@ -1,37 +1,49 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: pageHead('구독 해지 가이드', '넷플릭스, 멜론 등 구독 서비스 해지 방법을 단계별 화면 그림으로 알려드려요.', '/')}"></head>
+<head th:replace="~{fragments/layout :: pageHead('구독 해지 가이드', '넷플릭스, 멜론 같은 구독 서비스를 어디서 어떻게 해지하는지 단계별로 알려드려요.', '/')}"></head>
 <body>
 <header th:replace="~{fragments/layout :: siteHeader(false)}"></header>
 
-<main class="container">
-    <section class="text-center py-4">
-        <h1 class="fw-bold">구독 해지 가이드</h1>
-        <p class="lead text-secondary">구독 해지 방법을 단계별 그림으로 알려드려요.</p>
+<main class="wrap">
+    <section class="hero">
+        <h1>구독 해지 가이드</h1>
+        <p class="lead">넷플릭스, 멜론 같은 구독 서비스를 어디서 어떻게 해지하는지 단계별로 알려드려요.</p>
 
-        <form class="d-flex gap-2 mx-auto mt-4" style="max-width: 560px" th:action="@{/search}" method="get" role="search">
-            <input class="form-control form-control-lg" type="search" name="q"
-                   placeholder="예: 넷플릭스" aria-label="서비스 이름">
-            <button class="btn btn-primary btn-lg text-nowrap" type="submit">검색</button>
+        <form class="hero-search" th:action="@{/search}" method="get" role="search">
+            <input type="search" name="q" placeholder="예: 넷플릭스" aria-label="서비스 이름">
+            <button class="btn btn-primary btn-lg" type="submit">검색</button>
         </form>
     </section>
 
-    <section class="mt-4">
-        <h2 class="h4 mb-3">카테고리</h2>
-        <div class="row g-3">
-            <div class="col-6 col-md-4" th:each="category : ${categories}">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center py-4">
-                        <a class="stretched-link fw-semibold text-decoration-none"
-                           th:href="@{/category/{slug}(slug=${category.slug})}"
-                           th:text="${category.name}">카테고리 이름</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- 탭은 카테고리 화면 링크라 자바스크립트 없이도 동작한다. 자바스크립트가 있으면 home-filter.js가 이 화면에서 바로 거른다 -->
+    <nav class="tabs" aria-label="카테고리">
+        <ul>
+            <li><a th:href="@{/}" data-category="" aria-current="page">전체</a></li>
+            <li th:each="category : ${categories}">
+                <a th:href="@{/category/{slug}(slug=${category.slug})}"
+                   th:attr="data-category=${category.slug}"
+                   th:text="${category.name}">카테고리</a>
+            </li>
+        </ul>
+    </nav>
+
+    <section class="svc-group" th:each="group : ${groups}" th:attr="data-category=${group.category.slug}">
+        <h2 th:text="${group.category.name}">카테고리</h2>
+        <ul class="svc-list">
+            <li th:each="subscription : ${group.subscriptions}">
+                <a th:replace="~{fragments/ui :: serviceRow(${subscription}, ${stepCounts[subscription.id] ?: 0})}"></a>
+            </li>
+        </ul>
     </section>
+
+    <p class="muted" th:if="${groups.isEmpty()}">아직 등록된 서비스가 없어요.</p>
+
+    <p class="notice" style="margin-top: 32px">
+        찾는 서비스가 없나요? <a th:href="@{/submit}">제보하기 →</a>
+    </p>
 </main>
 
 <footer th:replace="~{fragments/layout :: siteFooter}"></footer>
+<script th:src="@{/js/home-filter.js}" defer></script>
 </body>
 </html>

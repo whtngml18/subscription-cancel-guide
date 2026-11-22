@@ -24,6 +24,13 @@ public class FeedbackService {
         feedbackRepository.save(new Feedback(subscription, helpful));
     }
 
+    // 서비스 하나의 맞았어요·달라요 개수 (가이드 화면의 "N명 중 M명")
+    public FeedbackCount countFor(Subscription subscription) {
+        long total = feedbackRepository.countBySubscription(subscription);
+        long helpful = feedbackRepository.countBySubscriptionAndHelpfulTrue(subscription);
+        return new FeedbackCount(subscription.getId(), helpful, total - helpful);
+    }
+
     // key: 서비스 id. 피드백이 없는 서비스는 Map에 없다.
     public Map<Long, FeedbackCount> countAllBySubscription() {
         return feedbackRepository.countAllBySubscription().stream()

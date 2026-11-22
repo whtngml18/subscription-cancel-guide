@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  사용자 화면 부품
+  - serviceIcon(subscription): 서비스 아이콘. 브랜드 색 네모 + 이름 첫 글자 (색이 없으면 회색)
+  - serviceRow(subscription, stepCount): 목록 한 줄 (아이콘 · 이름 · 단계 수)
+  - missingInfo(name): 아직 없는 정보 자리. 제보 화면으로 보내는 링크
+-->
+<span th:fragment="serviceIcon(subscription)" class="svc-icon" aria-hidden="true"
+      th:style="${#strings.isEmpty(subscription.brandColor)} ? null : '--brand: ' + ${subscription.brandColor}"
+      th:text="${#strings.substring(subscription.name, 0, 1)}">넷</span>
+
+<a th:fragment="serviceRow(subscription, stepCount)" class="svc-row"
+   th:href="@{/guide/{slug}(slug=${subscription.slug})}">
+    <span th:replace="~{fragments/ui :: serviceIcon(${subscription})}"></span>
+    <span class="svc-text">
+        <span class="svc-name" th:text="${subscription.name}">서비스 이름</span>
+        <span class="svc-meta" th:text="${stepCount > 0} ? ${stepCount} + '단계' : '단계 준비 중'">3단계</span>
+    </span>
+</a>
+
+<p th:fragment="missingInfo(name)" class="missing">
+    아직 확인된 정보가 없어요.
+    <a th:href="@{/submit(name=${name})}">알고 계시면 알려 주세요 →</a>
+</p>
+</body>
+</html>

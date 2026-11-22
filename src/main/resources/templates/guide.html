@@ -1,70 +1,66 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: pageHead(${subscription.name} + ' 해지 방법 | 구독 해지 가이드', ${subscription.name} + ' 구독 해지 방법을 ' + ${steps.size()} + '단계 화면 그림으로 알려드려요. 환불 안내와 마지막 확인일도 함께 확인하세요.', '/guide/' + ${subscription.slug})}"></head>
+<head th:replace="~{fragments/layout :: pageHead(${subscription.name} + ' 해지 방법 | 구독 해지 가이드', ${subscription.name} + ' 구독 해지 방법을 ' + (${steps.isEmpty()} ? '정리하고 있어요.' : ${steps.size()} + '단계로 알려드려요.') + ' 환불 안내와 마지막 확인일도 함께 확인하세요.', '/guide/' + ${subscription.slug})}"></head>
 <body>
 <header th:replace="~{fragments/layout :: siteHeader(true)}"></header>
 
-<main class="container">
-    <a class="d-inline-block mb-2"
-       th:href="@{/category/{slug}(slug=${subscription.category.slug})}"
-       th:text="'← ' + ${subscription.category.name}">← 카테고리</a>
+<main class="wrap">
+    <nav th:replace="~{fragments/layout :: breadcrumb(${subscription.category}, ${subscription.name})}"></nav>
 
-    <h1 class="h2 fw-bold" th:text="${subscription.name} + ' 해지 방법'">서비스 해지 방법</h1>
+    <div class="guide-title">
+        <span th:replace="~{fragments/ui :: serviceIcon(${subscription})}"></span>
+        <h1 th:text="${subscription.name} + ' 해지 방법'">서비스 해지 방법</h1>
+    </div>
 
-    <p class="d-flex flex-wrap align-items-center gap-2 text-secondary">
-        <span class="badge rounded-pill"
-              th:classappend="${subscription.source.name() == 'ADMIN'} ? 'text-bg-secondary' : 'text-bg-info'"
-              th:text="${subscription.source.label}">관리자 작성</span>
-        <span th:if="${subscription.verifiedAt != null}"
-              th:text="'마지막 확인일: ' + ${#temporals.format(subscription.verifiedAt, 'yyyy년 M월 d일')}">마지막 확인일</span>
-    </p>
+    <p class="lead" th:text="${summary.sentence}">3단계로 해지할 수 있어요.</p>
 
-    <section class="mt-4">
-        <h2 class="h4">해지 단계</h2>
+    <ul class="chips">
+        <li class="chip" th:unless="${steps.isEmpty()}" th:text="${steps.size()} + '단계'">3단계</li>
+        <li class="chip" th:if="${subscription.verifiedAt != null}"
+            th:text="${#temporals.format(subscription.verifiedAt, 'yyyy.M.d')} + ' 확인'">2026.11.12 확인</li>
+        <li class="chip" th:text="${subscription.source.label}">관리자 작성</li>
+    </ul>
 
-        <p class="text-secondary" th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
-
-        <ol class="list-group list-group-numbered" th:unless="${steps.isEmpty()}">
-            <li class="list-group-item d-flex gap-2" th:each="step : ${steps}">
-                <div>
-                    <strong>
-                        [<span th:text="${step.screenName}">화면</span>]
-                        <span th:text="${step.targetLabel}">누를 버튼</span>
-                    </strong>
-                    <p class="mb-0 text-secondary" th:text="${step.description}">설명</p>
-                </div>
-            </li>
-        </ol>
+    <section class="summary-box" aria-label="요약">
+        <dl>
+            <th:block th:if="${summary.route != null}">
+                <dt>경로</dt>
+                <dd th:text="${summary.route}">홈 › 프로필 › 계정</dd>
+            </th:block>
+            <dt>환불</dt>
+            <dd>
+                <th:block th:if="${!#strings.isEmpty(subscription.refundInfo)}" th:text="${subscription.refundInfo}">환불 정보</th:block>
+                <!-- th:replace는 th:if보다 먼저 처리되므로 조건은 바깥 th:block에 둔다 -->
+                <th:block th:if="${#strings.isEmpty(subscription.refundInfo)}">
+                    <p th:replace="~{fragments/ui :: missingInfo(${subscription.name})}"></p>
+                </th:block>
+            </dd>
+            <dt>해지하는 곳</dt>
+            <dd><p th:replace="~{fragments/ui :: missingInfo(${subscription.name})}"></p></dd>
+        </dl>
     </section>
 
-    <section class="mt-4" th:unless="${steps.isEmpty()}">
-        <h2 class="h5">화면으로 보기</h2>
-        <ol class="phone-list">
-            <li th:each="step : ${steps}">
-                <figure th:replace="~{fragments/phone :: phone(${step}, ${subscription.brandColor})}"></figure>
-            </li>
-        </ol>
+    <section>
+        <h2>해지 단계</h2>
+        <p class="muted" th:if="${steps.isEmpty()}" th:text="${summary.sentence}">아직 등록된 해지 단계가 없어요.</p>
+        <th:block th:unless="${steps.isEmpty()}">
+            <ol th:replace="~{fragments/steps :: stepList(${steps}, ${subscription.brandColor})}"></ol>
+        </th:block>
     </section>
 
-    <section class="card mt-4">
-        <div class="card-body">
-            <h2 class="h5 card-title">환불 안내</h2>
-            <p class="card-text" th:text="${subscription.refundInfo} ?: '등록된 환불 정보가 없어요.'">환불 정보</p>
-        </div>
-    </section>
+    <section id="feedback" class="feedback">
+        <p th:if="${feedbackDone}">알려 주셔서 고마워요! 다른 분들께 큰 도움이 돼요.</p>
 
-    <section id="feedback" class="card mt-4">
-        <div class="card-body text-center">
-            <p class="mb-0" th:if="${feedbackDone}">알려 주셔서 고마워요! 다른 분들께 큰 도움이 돼요.</p>
+        <form th:unless="${feedbackDone}" th:action="@{/guide/{slug}/feedback(slug=${subscription.slug})}" method="post">
+            <p><strong>이 방법대로 해지가 되었나요?</strong></p>
+            <div class="btn-row">
+                <button class="btn btn-primary" type="submit" name="helpful" value="true">됐어요</button>
+                <button class="btn btn-secondary" type="submit" name="helpful" value="false">달라요</button>
+            </div>
+        </form>
 
-            <form th:unless="${feedbackDone}" th:action="@{/guide/{slug}/feedback(slug=${subscription.slug})}" method="post">
-                <p class="fw-semibold">이 방법대로 해지가 되었나요?</p>
-                <div class="d-flex justify-content-center flex-wrap gap-2">
-                    <button class="btn btn-success" type="submit" name="helpful" value="true">이 방법이 맞았어요</button>
-                    <button class="btn btn-outline-secondary" type="submit" name="helpful" value="false">달라요</button>
-                </div>
-            </form>
-        </div>
+        <p class="feedback-count" th:if="${feedbackCount.helpful + feedbackCount.notHelpful > 0}"
+           th:text="${feedbackCount.helpful + feedbackCount.notHelpful} + '명 중 ' + ${feedbackCount.helpful} + '명이 됐다고 했어요'">10명 중 9명이 됐다고 했어요</p>
     </section>
 </main>
 
