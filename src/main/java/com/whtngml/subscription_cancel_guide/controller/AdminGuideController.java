@@ -30,6 +30,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class AdminGuideController {
 
+    // 머리글에서 지금 보고 있는 메뉴 표시
+    @ModelAttribute("adminMenu")
+    public String adminMenu() {
+        return "guides";
+    }
+
     private final IconService iconService;
 
     private final SubscriptionRepository subscriptionRepository;
@@ -44,7 +50,6 @@ public class AdminGuideController {
     public String list(Model model) {
         model.addAttribute("subscriptions", subscriptionRepository.findAll(Sort.by("name")));
         model.addAttribute("feedbackCounts", feedbackService.countAllBySubscription());
-        model.addAttribute("pendingCount", submissionService.countPending());
         return "admin/guides";
     }
 
