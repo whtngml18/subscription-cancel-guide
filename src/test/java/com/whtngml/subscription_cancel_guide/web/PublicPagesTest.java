@@ -13,7 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -89,5 +93,39 @@ class PublicPagesTest {
                 .andExpect(content().string(containsString("svc-icon")))
                 .andExpect(content().string(not(containsString("--brand: null"))))
                 .andExpect(content().string(not(containsString("--brand: ;"))));
+    }
+
+    @Test
+    void guideShowsSummaryFirstAndStepsOnce() throws Exception {
+        mvc.perform(get("/guide/netflix")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("넷플릭스 해지 방법")))
+                .andExpect(content().string(containsString("3단계로 해지할 수 있어요.")))
+                .andExpect(content().string(containsString("class=\"steps\"")))
+                .andExpect(content().string(not(containsString("phone-list"))))
+                .andExpect(content().string(containsString("aria-label=\"위치\"")))
+                .andExpect(content().string(containsString("/submit?name=")))          // 빈 정보 칸
+                .andExpect(content().string(containsString("application/ld+json")));   // SEO 유지
+    }
+
+    @Test
+    void refundInfoHidesMissingNotice() throws Exception {
+        // 넷플릭스는 환불 정보가 있으므로 "아직 확인된 정보가 없어요"는 해지하는 곳 한 군데만
+        String html = mvc.perform(get("/guide/netflix")).andReturn().getResponse().getContentAsString();
+        assertTrue(html.contains("해지해도 다음 결제일 전까지 이용할 수 있어요."));
+        assertEquals(1, html.split("아직 확인된 정보가 없어요", -1).length - 1);
+    }
+
+    @Test
+    void guideWithoutSteps() throws Exception {
+        mvc.perform(get("/guide/tving")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("아직 등록된 해지 단계가 없어요.")))
+                .andExpect(content().string(not(containsString("application/ld+json"))));
+    }
+
+    @Test
+    void guideShowsFeedbackCount() throws Exception {
+        mvc.perform(post("/guide/netflix/feedback").param("helpful", "true").with(csrf()));
+        mvc.perform(get("/guide/netflix"))
+                .andExpect(content().string(containsString("1명 중 1명이 됐다고 했어요")));
     }
 }
