@@ -4,105 +4,110 @@
 <body>
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
-<main class="container">
-    <div class="alert alert-danger" th:if="${uploadError}" th:text="${uploadError}">업로드 오류</div>
-    <a class="d-inline-block mb-2" th:href="@{/admin/submissions}">← 제보 검토</a>
+<main class="wrap-wide">
+    <p class="alert-error" role="alert" th:if="${uploadError}" th:text="${uploadError}">업로드 오류</p>
 
-    <h1 class="h3" th:text="${submission.serviceName} + ' 제보'">제보</h1>
+    <nav class="breadcrumb" aria-label="위치">
+        <ol>
+            <li><a th:href="@{/admin/submissions}">제보 검토</a></li>
+            <li aria-current="page" th:text="${submission.serviceName}">서비스</li>
+        </ol>
+    </nav>
 
-    <p class="d-flex flex-wrap align-items-center gap-2 text-secondary">
-        <span class="badge rounded-pill text-bg-secondary" th:text="${submission.status.label}">검토 대기</span>
-        <span th:text="${#temporals.format(submission.createdAt, 'yyyy년 M월 d일 HH:mm')}">제보 시각</span>
-    </p>
+    <div class="page-bar">
+        <h1 th:text="${submission.serviceName} + ' 제보'">제보</h1>
+        <span class="chip" th:text="${submission.status.label}">검토 대기</span>
+        <span class="muted" th:text="${#temporals.format(submission.createdAt, 'yyyy년 M월 d일 HH:mm')}">제보 시각</span>
+    </div>
 
-    <section class="card mb-4">
-        <div class="card-body">
-            <h2 class="h5 card-title">제보 원문</h2>
-            <p class="card-text pre-line" th:text="${submission.rawText}">해지 방법 글</p>
-            <p class="card-text mb-1" th:unless="${submission.channels.isEmpty()}">
-                <strong>해지하는 곳:</strong>
-                <span th:each="channel, stat : ${submission.channels}" th:text="${channel.label} + (${stat.last} ? '' : ' · ')">앱</span>
-            </p>
-            <p class="card-text mb-1" th:if="${submission.caution != null}">
-                <strong>주의할 점:</strong> <span th:text="${submission.caution}">주의</span>
-            </p>
-            <p class="card-text" th:if="${submission.icon != null}">
-                <strong>아이콘:</strong>
-                <img th:src="@{/admin/icons/{id}(id=${submission.icon.id})}" width="48" height="48" alt="제보한 아이콘" class="rounded border align-middle">
-            </p>
+    <!-- 왼쪽: 사용자가 보낸 내용 / 오른쪽: 승인·반려 (좁은 화면에서는 위아래) -->
+    <div class="cols-2">
+        <div>
+            <fieldset class="form-section">
+                <legend>보낸 내용</legend>
+                <p class="raw-text" th:text="${submission.rawText}">해지 방법 글</p>
+                <div class="summary-box" style="border: 0; padding: 0">
+                    <dl>
+                        <dt>해지하는 곳</dt>
+                        <dd>
+                            <th:block th:if="${submission.channels.isEmpty()}">—</th:block>
+                            <span th:each="channel, stat : ${submission.channels}" th:text="${channel.label} + (${stat.last} ? '' : ' · ')">앱</span>
+                        </dd>
+                        <dt>주의할 점</dt>
+                        <dd th:text="${submission.caution} ?: '—'">주의</dd>
+                        <dt>아이콘</dt>
+                        <dd>
+                            <img th:if="${submission.icon != null}" th:src="@{/admin/icons/{id}(id=${submission.icon.id})}"
+                                 width="48" height="48" alt="제보한 아이콘" class="svc-icon">
+                            <th:block th:if="${submission.icon == null}">—</th:block>
+                        </dd>
+                    </dl>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-section" th:unless="${aiSteps.isEmpty()}">
+                <legend>AI가 나눈 단계</legend>
+                <p class="muted">제보 원문과 비교해 보세요. 승인할 때 이 단계를 그대로 가져올 수 있어요.</p>
+                <ol th:replace="~{fragments/steps :: stepList(${aiSteps}, null)}"></ol>
+            </fieldset>
         </div>
-    </section>
 
-    <section class="card mb-4" th:unless="${aiSteps.isEmpty()}">
-        <div class="card-body">
-            <h2 class="h5 card-title">AI가 나눈 단계</h2>
-            <p class="text-secondary small">제보 원문과 비교해 보세요. 승인할 때 이 단계를 그대로 가져올 수 있어요.</p>
-            <ol class="phone-list">
-                <li th:each="step : ${aiSteps}">
-                    <figure th:replace="~{fragments/phone :: phone(${step}, null)}"></figure>
-                </li>
-            </ol>
-        </div>
-    </section>
-
-    <th:block th:if="${submission.pending}">
-        <section class="card border-primary mb-4" th:if="${sameName != null}">
-            <div class="card-body">
-                <h2 class="h5 card-title">기존 서비스로 승인</h2>
+        <div th:if="${submission.pending}">
+            <fieldset class="form-section" th:if="${sameName != null}">
+                <legend>기존 서비스로 승인</legend>
                 <p th:text="'이미 \'' + ${sameName.name} + '\' 가이드가 있어요. 새로 만들지 않고 이 가이드를 고칠 수 있어요.'">이미 가이드가 있어요.</p>
                 <form th:action="@{/admin/submissions/{id}/approve-existing(id=${submission.id})}" method="post">
-                    <div class="form-check mb-3" th:unless="${aiSteps.isEmpty()}">
-                        <input class="form-check-input" type="checkbox" id="importAiStepsExisting" name="importAiSteps" value="true">
-                        <label class="form-check-label" for="importAiStepsExisting">기존 해지 단계를 지우고 AI 단계로 바꾸기</label>
-                    </div>
-                    <div class="form-check mb-3" th:if="${submission.hasDetails()}">
-                        <input class="form-check-input" type="checkbox" id="importDetailsExisting" name="importDetails" value="true">
-                        <label class="form-check-label" for="importDetailsExisting">해지하는 곳·주의할 점을 제보 내용으로 바꾸기</label>
-                    </div>
-                    <div class="form-check mb-3" th:if="${submission.icon != null}">
-                        <input class="form-check-input" type="checkbox" id="importIconExisting" name="importIcon" value="true">
-                        <label class="form-check-label" for="importIconExisting">아이콘을 제보한 이미지로 바꾸기</label>
+                    <div class="check-list">
+                        <label th:unless="${aiSteps.isEmpty()}">
+                            <input type="checkbox" id="importAiStepsExisting" name="importAiSteps" value="true">
+                            기존 해지 단계를 지우고 AI 단계로 바꾸기
+                        </label>
+                        <label th:if="${submission.hasDetails()}">
+                            <input type="checkbox" id="importDetailsExisting" name="importDetails" value="true">
+                            해지하는 곳·주의할 점을 제보 내용으로 바꾸기
+                        </label>
+                        <label th:if="${submission.icon != null}">
+                            <input type="checkbox" id="importIconExisting" name="importIcon" value="true">
+                            아이콘을 제보한 이미지로 바꾸기
+                        </label>
                     </div>
                     <button class="btn btn-primary" type="submit" th:text="'\'' + ${sameName.name} + '\'(으)로 승인'">기존 서비스로 승인</button>
                 </form>
-            </div>
-        </section>
+            </fieldset>
 
-        <section class="mb-4">
-            <h2 class="h5">새 서비스로 승인</h2>
-            <p class="text-secondary">서비스 정보를 채우고 승인하면, 다음 화면에서 해지 단계를 입력해요.</p>
-
-            <form class="card card-body" th:action="@{/admin/submissions/{id}/approve(id=${submission.id})}" th:object="${form}" method="post" enctype="multipart/form-data">
+            <form th:action="@{/admin/submissions/{id}/approve(id=${submission.id})}" th:object="${form}"
+                  method="post" enctype="multipart/form-data">
+                <h2 style="margin-top: 0">새 서비스로 승인</h2>
+                <p class="muted">서비스 정보를 채우고 승인하면, 다음 화면에서 해지 단계를 입력해요.</p>
                 <th:block th:replace="~{fragments/subscription-fields :: fields}"></th:block>
-                <div class="form-check mb-3" th:unless="${aiSteps.isEmpty()}">
-                    <input class="form-check-input" type="checkbox" id="importAiSteps" name="importAiSteps" value="true" checked>
-                    <label class="form-check-label" for="importAiSteps">AI 단계를 해지 단계로 가져오기</label>
+                <div class="check-list">
+                    <label th:unless="${aiSteps.isEmpty()}">
+                        <input type="checkbox" id="importAiSteps" name="importAiSteps" value="true" checked>
+                        AI 단계를 해지 단계로 가져오기
+                    </label>
+                    <label th:if="${submission.hasDetails()}">
+                        <input type="checkbox" id="importDetails" name="importDetails" value="true" checked aria-describedby="importDetails-help">
+                        해지하는 곳·주의할 점 가져오기
+                    </label>
+                    <p class="field-help" id="importDetails-help" th:if="${submission.hasDetails()}">체크하면 위에 쓴 값 대신 제보 내용을 써요.</p>
+                    <label th:if="${submission.icon != null}">
+                        <input type="checkbox" id="importIcon" name="importIcon" value="true" checked>
+                        아이콘 가져오기 (위에서 새 아이콘을 올리면 그것을 써요)
+                    </label>
                 </div>
-                <div class="form-check mb-3" th:if="${submission.hasDetails()}">
-                    <input class="form-check-input" type="checkbox" id="importDetails" name="importDetails" value="true" checked>
-                    <label class="form-check-label" for="importDetails">해지하는 곳·주의할 점 가져오기</label>
-                </div>
-                <div class="form-check mb-3" th:if="${submission.icon != null}">
-                    <input class="form-check-input" type="checkbox" id="importIcon" name="importIcon" value="true" checked>
-                    <label class="form-check-label" for="importIcon">아이콘 가져오기 (위에서 새 아이콘을 올리면 그것을 써요)</label>
-                </div>
-                <div>
-                    <button class="btn btn-primary" type="submit">새 서비스로 승인</button>
-                </div>
+                <button class="btn btn-primary" type="submit">새 서비스로 승인</button>
             </form>
-        </section>
 
-        <section class="card border-danger">
-            <div class="card-body">
-                <h2 class="h5 card-title text-danger">반려</h2>
+            <section class="danger-zone">
+                <h2 style="margin-top: 0">반려</h2>
                 <p>반려한 제보는 공개되지 않아요. 기록은 남아요.</p>
                 <form th:action="@{/admin/submissions/{id}/reject(id=${submission.id})}" method="post"
                       onsubmit="return confirm('이 제보를 반려할까요?');">
-                    <button class="btn btn-outline-danger" type="submit">반려</button>
+                    <button class="btn btn-danger" type="submit">반려</button>
                 </form>
-            </div>
-        </section>
-    </th:block>
+            </section>
+        </div>
+    </div>
 </main>
 </body>
 </html>

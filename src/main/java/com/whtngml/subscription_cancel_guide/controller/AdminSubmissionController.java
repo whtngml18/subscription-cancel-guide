@@ -31,6 +31,12 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class AdminSubmissionController {
 
+    // 머리글에서 지금 보고 있는 메뉴 표시
+    @ModelAttribute("adminMenu")
+    public String adminMenu() {
+        return "submissions";
+    }
+
     private final IconService iconService;
 
     private static final int PAGE_SIZE = 10;

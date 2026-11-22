@@ -62,12 +62,6 @@ class PublicPagesTest {
     }
 
     @Test
-    void adminPagesKeepBootstrap() throws Exception {
-        mvc.perform(get("/admin/login")).andExpect(status().isOk())
-                .andExpect(content().string(containsString("bootstrap")));
-    }
-
-    @Test
     void homeListsAllServicesWithStepCount() throws Exception {
         mvc.perform(get("/")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("넷플릭스")))

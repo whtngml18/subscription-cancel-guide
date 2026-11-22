@@ -4,34 +4,46 @@
 <body>
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
-<main class="container">
-    <h1 class="h3 mb-3">제보 검토</h1>
-
-    <div class="alert alert-success" th:if="${message}" th:text="${message}">알림</div>
-
-    <p class="text-secondary" th:if="${page.isEmpty()}">검토할 제보가 없어요.</p>
-
-    <div class="list-group" th:unless="${page.isEmpty()}">
-        <a class="list-group-item list-group-item-action d-flex flex-wrap justify-content-between gap-2 py-3"
-           th:each="submission : ${page.content}"
-           th:href="@{/admin/submissions/{id}(id=${submission.id})}">
-            <span class="fw-semibold" th:text="${submission.serviceName}">서비스 이름</span>
-            <small class="text-secondary" th:text="${#temporals.format(submission.createdAt, 'M월 d일 HH:mm')}">제보 시각</small>
-        </a>
+<main class="wrap-wide">
+    <div class="page-bar">
+        <h1>제보 검토</h1>
     </div>
 
-    <nav class="mt-4" th:if="${page.totalPages > 1}" aria-label="페이지">
-        <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${page.hasPrevious()} ? '' : 'disabled'">
-                <a class="page-link" th:href="@{/admin/submissions(page=${page.number - 1})}">← 이전</a>
-            </li>
-            <li class="page-item active">
-                <span class="page-link" th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span>
-            </li>
-            <li class="page-item" th:classappend="${page.hasNext()} ? '' : 'disabled'">
-                <a class="page-link" th:href="@{/admin/submissions(page=${page.number + 1})}">다음 →</a>
-            </li>
-        </ul>
+    <p class="alert-success" th:if="${message}" th:text="${message}">알림</p>
+
+    <p class="muted" th:if="${page.isEmpty()}">검토할 제보가 없어요.</p>
+
+    <div class="table-wrap" th:unless="${page.isEmpty()}">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th scope="col">서비스 이름</th>
+                <th scope="col">제보 시각</th>
+                <th scope="col">첨부</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="submission : ${page.content}">
+                <td><a th:href="@{/admin/submissions/{id}(id=${submission.id})}" th:text="${submission.serviceName}">서비스 이름</a></td>
+                <td style="white-space: nowrap" th:text="${#temporals.format(submission.createdAt, 'M월 d일 HH:mm')}">11월 22일 10:00</td>
+                <td>
+                    <ul class="chips" style="margin: 0">
+                        <li class="chip" th:if="${submission.aiStepsJson != null}">AI 단계</li>
+                        <li class="chip" th:if="${submission.icon != null}">아이콘</li>
+                        <li class="chip" th:if="${submission.hasDetails()}">추가 정보</li>
+                    </ul>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pager" th:if="${page.totalPages > 1}" aria-label="페이지">
+        <a th:if="${page.hasPrevious()}" th:href="@{/admin/submissions(page=${page.number - 1})}">← 이전</a>
+        <span th:unless="${page.hasPrevious()}" aria-disabled="true">← 이전</span>
+        <span th:text="${page.number + 1} + ' / ' + ${page.totalPages}">1 / 1</span>
+        <a th:if="${page.hasNext()}" th:href="@{/admin/submissions(page=${page.number + 1})}">다음 →</a>
+        <span th:unless="${page.hasNext()}" aria-disabled="true">다음 →</span>
     </nav>
 </main>
 </body>
