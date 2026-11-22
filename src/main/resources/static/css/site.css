@@ -329,6 +329,7 @@ fieldset.field legend {
     background: var(--normal-bg);
     color: var(--normal);
     font-size: .8125rem;
+    white-space: nowrap;
 }
 
 .notice {
