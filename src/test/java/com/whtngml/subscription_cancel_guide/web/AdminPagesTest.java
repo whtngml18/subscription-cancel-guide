@@ -14,7 +14,10 @@ import java.util.Set;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,6 +32,12 @@ class AdminPagesTest {
 
     @Autowired
     SubmissionRepository submissionRepository;
+
+    @Autowired
+    com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository subscriptionRepository;
+
+    @Autowired
+    com.whtngml.subscription_cancel_guide.repository.GuideStepRepository guideStepRepository;
 
     Submission saveSubmission(String name) {
         return submissionRepository.save(new Submission(name, "설정에서 해지를 눌러요 열 글자", null, Set.of(), null, null));
@@ -91,5 +100,47 @@ class AdminPagesTest {
     void guidesTableIsWrapped() throws Exception {
         mvc.perform(get("/admin/guides"))
                 .andExpect(content().string(containsString("class=\"table-wrap\"")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void serviceFormHasThreeSections() throws Exception {
+        mvc.perform(get("/admin/guides/1/edit")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("<legend>기본 정보</legend>")))
+                .andExpect(content().string(containsString("<legend>해지 정보</legend>")))
+                .andExpect(content().string(containsString("<legend>확인</legend>")))
+                .andExpect(content().string(containsString("mini-phone")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void serviceFormErrorsLinked() throws Exception {
+        mvc.perform(multipart("/admin/guides/1/edit").param("categoryId", "1").param("name", "넷플릭스")
+                        .param("slug", "잘못").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("aria-describedby=\"slug-error slug-help\"")))
+                .andExpect(content().string(containsString("id=\"slug-error\"")))
+                .andExpect(content().string(containsString("aria-invalid=\"true\"")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void stepFormHasPreview() throws Exception {
+        mvc.perform(get("/admin/guides/1/steps/new")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("mini-phone")))
+                .andExpect(content().string(not(containsString("form-control"))));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void deleteStepStillWorks() throws Exception {
+        var netflix = subscriptionRepository.findBySlug("netflix").orElseThrow();
+        var steps = guideStepRepository.findAllBySubscriptionOrderByStepOrderAsc(netflix);
+        mvc.perform(get("/admin/guides/{id}/edit", netflix.getId()))
+                .andExpect(content().string(containsString("/steps/" + steps.get(0).getId() + "/delete")));
+        mvc.perform(post("/admin/guides/{id}/steps/{stepId}/delete", netflix.getId(), steps.get(0).getId()).with(csrf()))
+                .andExpect(status().is3xxRedirection());
+        org.junit.jupiter.api.Assertions.assertEquals(steps.size() - 1,
+                guideStepRepository.findAllBySubscriptionOrderByStepOrderAsc(netflix).size());
     }
 }

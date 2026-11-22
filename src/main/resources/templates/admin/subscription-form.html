@@ -4,70 +4,90 @@
 <body>
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
-<main class="container">
-    <div class="alert alert-danger" th:if="${uploadError}" th:text="${uploadError}">업로드 오류</div>
-    <a class="d-inline-block mb-2" th:href="@{/admin/guides}">← 가이드 관리</a>
+<main class="wrap-wide">
+    <p class="alert-error" role="alert" th:if="${uploadError}" th:text="${uploadError}">업로드 오류</p>
 
-    <h1 class="h3 mb-3" th:text="${subscription == null ? '새 서비스 등록' : subscription.name + ' 수정'}">서비스</h1>
+    <nav class="breadcrumb" aria-label="위치">
+        <ol>
+            <li><a th:href="@{/admin/guides}">가이드 관리</a></li>
+            <li aria-current="page" th:text="${subscription == null ? '새 서비스' : subscription.name}">서비스</li>
+        </ol>
+    </nav>
 
-    <div class="alert alert-success" th:if="${message}" th:text="${message}">알림</div>
+    <div class="page-bar">
+        <h1 th:text="${subscription == null ? '새 서비스 등록' : subscription.name + ' 수정'}">서비스</h1>
+        <a class="btn btn-sm" th:if="${subscription != null}" th:href="@{/guide/{slug}(slug=${subscription.slug})}">사이트에서 보기 ↗</a>
+    </div>
 
-    <form class="card card-body"
-          th:action="${subscription == null} ? @{/admin/guides/new} : @{/admin/guides/{id}/edit(id=${subscription.id})}"
+    <p class="alert-success" th:if="${message}" th:text="${message}">알림</p>
+
+    <form th:action="${subscription == null} ? @{/admin/guides/new} : @{/admin/guides/{id}/edit(id=${subscription.id})}"
           th:object="${form}" method="post" enctype="multipart/form-data">
         <th:block th:replace="~{fragments/subscription-fields :: fields}"></th:block>
 
-        <div class="d-flex gap-2">
+        <div class="btn-row">
             <button class="btn btn-primary" type="submit" th:text="${subscription == null ? '등록' : '저장'}">저장</button>
-            <a class="btn btn-outline-secondary" th:href="@{/admin/guides}">취소</a>
+            <a class="btn btn-secondary" th:href="@{/admin/guides}">취소</a>
         </div>
     </form>
 
     <th:block th:if="${subscription != null}">
-        <section class="mt-4" th:unless="${submissions.isEmpty()}">
-            <h2 class="h5">제보 원문</h2>
-            <p class="text-secondary">사용자가 보낸 글이에요. 보면서 해지 단계를 입력하세요.</p>
-            <div class="card card-body mb-2" th:each="submission : ${submissions}">
-                <p class="pre-line" th:text="${submission.rawText}">제보 글</p>
-                <small class="text-secondary" th:text="${#temporals.format(submission.createdAt, 'yyyy년 M월 d일')} + ' 제보'">제보일</small>
+        <section>
+            <div class="page-bar" style="margin-top: 32px">
+                <h2 style="margin: 0 auto 0 0">해지 단계</h2>
+                <a class="btn btn-primary btn-sm" th:href="@{/admin/guides/{id}/steps/new(id=${subscription.id})}">+ 단계 추가</a>
+            </div>
+
+            <p class="muted" th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
+
+            <div class="table-wrap" th:unless="${steps.isEmpty()}">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th scope="col">번호</th>
+                        <th scope="col">단계</th>
+                        <th scope="col">위치</th>
+                        <th scope="col"><span class="visually-hidden">관리</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="step : ${steps}">
+                        <td th:text="${step.stepOrder}">1</td>
+                        <td>
+                            <span th:text="${step.screenName}">화면</span>에서 <b th:text="${step.targetLabel}">버튼</b>
+                            <div class="muted" th:if="${step.description != null}" th:text="${step.description}">설명</div>
+                        </td>
+                        <td><div th:replace="~{fragments/steps :: miniPhone(${step.position}, ${subscription.brandColor})}"></div></td>
+                        <td class="actions">
+                            <a class="btn btn-secondary btn-sm"
+                               th:href="@{/admin/guides/{id}/steps/{stepId}/edit(id=${subscription.id}, stepId=${step.id})}">수정</a>
+                            <form th:action="@{/admin/guides/{id}/steps/{stepId}/delete(id=${subscription.id}, stepId=${step.id})}"
+                                  method="post" style="display: inline" onsubmit="return confirm('이 단계를 삭제할까요?');">
+                                <button class="btn btn-danger btn-sm" type="submit">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <section class="mt-4">
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <h2 class="h5 mb-0 me-auto">해지 단계</h2>
-                <a class="btn btn-sm btn-primary" th:href="@{/admin/guides/{id}/steps/new(id=${subscription.id})}">+ 단계 추가</a>
-                <a class="btn btn-sm btn-outline-secondary" th:href="@{/guide/{slug}(slug=${subscription.slug})}">사이트에서 보기</a>
+        <section th:unless="${submissions.isEmpty()}">
+            <h2>제보 원문</h2>
+            <p class="muted">사용자가 보낸 글이에요. 보면서 해지 단계를 입력하세요.</p>
+            <div th:each="submission : ${submissions}">
+                <p class="raw-text" th:text="${submission.rawText}">제보 글</p>
+                <p class="field-help" th:text="${#temporals.format(submission.createdAt, 'yyyy년 M월 d일')} + ' 제보'">제보일</p>
             </div>
-
-            <p class="text-secondary" th:if="${steps.isEmpty()}">아직 등록된 해지 단계가 없어요.</p>
-
-            <ul class="list-group" th:unless="${steps.isEmpty()}">
-                <li class="list-group-item d-flex flex-wrap align-items-center gap-2" th:each="step : ${steps}">
-                    <span class="me-auto">
-                        <strong th:text="${step.stepOrder} + '단계'">1단계</strong>
-                        [<span th:text="${step.screenName}">화면</span>]
-                        <span th:text="${step.targetLabel}">누를 버튼</span>
-                    </span>
-                    <a class="btn btn-sm btn-outline-primary"
-                       th:href="@{/admin/guides/{id}/steps/{stepId}/edit(id=${subscription.id}, stepId=${step.id})}">수정</a>
-                    <form th:action="@{/admin/guides/{id}/steps/{stepId}/delete(id=${subscription.id}, stepId=${step.id})}"
-                          method="post" onsubmit="return confirm('이 단계를 삭제할까요?');">
-                        <button class="btn btn-sm btn-outline-danger" type="submit">삭제</button>
-                    </form>
-                </li>
-            </ul>
         </section>
 
-        <section class="card border-danger mt-5">
-            <div class="card-body">
-                <h2 class="h5 text-danger">서비스 삭제</h2>
-                <p>서비스를 삭제하면 해지 단계와 피드백도 모두 함께 삭제돼요.</p>
-                <form th:action="@{/admin/guides/{id}/delete(id=${subscription.id})}" method="post"
-                      onsubmit="return confirm('이 서비스와 해지 단계를 모두 삭제할까요?');">
-                    <button class="btn btn-danger" type="submit">서비스 삭제</button>
-                </form>
-            </div>
+        <section class="danger-zone">
+            <h2 style="margin-top: 0">서비스 삭제</h2>
+            <p>서비스를 삭제하면 해지 단계와 피드백도 모두 함께 삭제돼요.</p>
+            <form th:action="@{/admin/guides/{id}/delete(id=${subscription.id})}" method="post"
+                  onsubmit="return confirm('이 서비스와 해지 단계를 모두 삭제할까요?');">
+                <button class="btn btn-danger" type="submit">서비스 삭제</button>
+            </form>
         </section>
     </th:block>
 </main>

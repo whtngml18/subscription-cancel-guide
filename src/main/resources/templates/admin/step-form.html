@@ -4,57 +4,94 @@
 <body>
 <header th:replace="~{fragments/layout :: adminHeader}"></header>
 
-<main class="container">
-    <a class="d-inline-block mb-2" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}" th:text="'← ' + ${subscription.name}">← 서비스</a>
+<main class="wrap-wide">
+    <nav class="breadcrumb" aria-label="위치">
+        <ol>
+            <li><a th:href="@{/admin/guides}">가이드 관리</a></li>
+            <li><a th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}" th:text="${subscription.name}">서비스</a></li>
+            <li aria-current="page" th:text="${stepId == null} ? '단계 추가' : '단계 수정'">단계</li>
+        </ol>
+    </nav>
 
-    <h1 class="h3 mb-3" th:text="${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정')">단계</h1>
+    <h1 th:text="${subscription.name} + (${stepId == null} ? ' 단계 추가' : ' 단계 수정')">단계</h1>
 
-    <form class="card card-body"
-          th:action="${stepId == null}
-                        ? @{/admin/guides/{id}/steps/new(id=${subscription.id})}
-                        : @{/admin/guides/{id}/steps/{stepId}/edit(id=${subscription.id}, stepId=${stepId})}"
-          th:object="${form}" method="post">
-        <div class="mb-3">
-            <label class="form-label" for="stepOrder">단계 번호</label>
-            <input class="form-control" th:errorclass="is-invalid" type="number" id="stepOrder" th:field="*{stepOrder}" min="1" max="50">
-            <div class="invalid-feedback" th:if="${#fields.hasErrors('stepOrder')}" th:errors="*{stepOrder}">오류</div>
-        </div>
+    <div class="cols-2">
+        <form th:action="${stepId == null}
+                            ? @{/admin/guides/{id}/steps/new(id=${subscription.id})}
+                            : @{/admin/guides/{id}/steps/{stepId}/edit(id=${subscription.id}, stepId=${stepId})}"
+              th:object="${form}" method="post">
+            <fieldset class="form-section">
+                <legend>단계</legend>
+                <th:block th:each="f : ${ {'stepOrder', 'screenName', 'targetLabel'} }">
+                    <div class="form-grid">
+                        <label th:for="${f}"
+                               th:text="${f == 'stepOrder'} ? '단계 번호' : (${f == 'screenName'} ? '화면 이름' : '누를 버튼')">칸</label>
+                        <div>
+                            <input th:if="${f == 'stepOrder'}" type="number" min="1" max="50" id="stepOrder" th:field="*{stepOrder}"
+                                   th:attr="aria-invalid=${#fields.hasErrors('stepOrder')} ? 'true' : null,
+                                            aria-describedby=${#fields.hasErrors('stepOrder')} ? 'stepOrder-error' : null">
+                            <input th:if="${f == 'screenName'}" type="text" maxlength="50" id="screenName" th:field="*{screenName}" placeholder="프로필"
+                                   th:attr="aria-invalid=${#fields.hasErrors('screenName')} ? 'true' : null,
+                                            aria-describedby=${#fields.hasErrors('screenName')} ? 'screenName-error' : 'screenName-help'">
+                            <input th:if="${f == 'targetLabel'}" type="text" maxlength="50" id="targetLabel" th:field="*{targetLabel}" placeholder="계정"
+                                   th:attr="aria-invalid=${#fields.hasErrors('targetLabel')} ? 'true' : null,
+                                            aria-describedby=${#fields.hasErrors('targetLabel')} ? 'targetLabel-error' : null">
+                            <p class="field-help" id="screenName-help" th:if="${f == 'screenName'}">지금 보고 있는 화면</p>
+                            <p class="field-error" th:id="${f} + '-error'" th:if="${#fields.hasErrors(f)}" th:errors="*{__${f}__}">오류</p>
+                        </div>
+                    </div>
+                </th:block>
 
-        <div class="mb-3">
-            <label class="form-label" for="screenName">화면 이름 (지금 보고 있는 화면)</label>
-            <input class="form-control" th:errorclass="is-invalid" type="text" id="screenName" th:field="*{screenName}" placeholder="프로필">
-            <div class="invalid-feedback" th:if="${#fields.hasErrors('screenName')}" th:errors="*{screenName}">오류</div>
-        </div>
+                <div class="form-grid">
+                    <label for="position">버튼 위치</label>
+                    <div>
+                        <select id="position" th:field="*{position}"
+                                th:attr="aria-invalid=${#fields.hasErrors('position')} ? 'true' : null,
+                                         aria-describedby=${#fields.hasErrors('position')} ? 'position-error' : null">
+                            <option value="">모름</option>
+                            <option value="top-left">왼쪽 위</option>
+                            <option value="top-right">오른쪽 위</option>
+                            <option value="middle">가운데</option>
+                            <option value="bottom">아래</option>
+                        </select>
+                        <p class="field-error" id="position-error" th:if="${#fields.hasErrors('position')}" th:errors="*{position}">오류</p>
+                    </div>
+                </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="targetLabel">누를 버튼</label>
-            <input class="form-control" th:errorclass="is-invalid" type="text" id="targetLabel" th:field="*{targetLabel}" placeholder="계정">
-            <div class="invalid-feedback" th:if="${#fields.hasErrors('targetLabel')}" th:errors="*{targetLabel}">오류</div>
-        </div>
+                <div class="form-grid">
+                    <label for="description">설명</label>
+                    <div>
+                        <textarea id="description" th:field="*{description}" rows="2" maxlength="500" placeholder="메뉴에서 계정을 눌러요."
+                                  th:attr="aria-invalid=${#fields.hasErrors('description')} ? 'true' : null,
+                                           aria-describedby=${#fields.hasErrors('description')} ? 'description-error' : null"></textarea>
+                        <p class="field-error" id="description-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">오류</p>
+                    </div>
+                </div>
+            </fieldset>
 
-        <div class="mb-3">
-            <label class="form-label" for="position">버튼 위치</label>
-            <select class="form-select" th:errorclass="is-invalid" id="position" th:field="*{position}">
-                <option value="">모름</option>
-                <option value="top-left">왼쪽 위</option>
-                <option value="top-right">오른쪽 위</option>
-                <option value="middle">가운데</option>
-                <option value="bottom">아래</option>
-            </select>
-            <div class="invalid-feedback" th:if="${#fields.hasErrors('position')}" th:errors="*{position}">오류</div>
-        </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" type="submit" th:text="${stepId == null ? '추가' : '저장'}">저장</button>
+                <a class="btn btn-secondary" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">취소</a>
+            </div>
+        </form>
 
-        <div class="mb-3">
-            <label class="form-label" for="description">설명</label>
-            <textarea class="form-control" th:errorclass="is-invalid" id="description" th:field="*{description}" rows="2" placeholder="메뉴에서 계정을 눌러요."></textarea>
-            <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">오류</div>
-        </div>
-
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary" type="submit" th:text="${stepId == null ? '추가' : '저장'}">저장</button>
-            <a class="btn btn-outline-secondary" th:href="@{/admin/guides/{id}/edit(id=${subscription.id})}">취소</a>
-        </div>
-    </form>
+        <section aria-label="미리보기">
+            <h2 style="margin-top: 0">미리보기</h2>
+            <p class="muted">사용자 화면에서는 이렇게 누를 곳을 보여 줘요.</p>
+            <div id="phonePreview" th:replace="~{fragments/steps :: miniPhone(${form.position}, ${subscription.brandColor})}"></div>
+        </section>
+    </div>
 </main>
+
+<script>
+    // 버튼 위치를 바꾸면 미리보기의 점 위치도 바로 바꾼다
+    (function () {
+        var select = document.getElementById('position');
+        var phone = document.querySelector('[aria-label="미리보기"] .mini-phone');
+        select.addEventListener('change', function () {
+            phone.className = phone.className.replace(/\bpos-[\w-]+/, 'pos-' + (select.value || 'middle'));
+        });
+    })();
+</script>
 </body>
 </html>
