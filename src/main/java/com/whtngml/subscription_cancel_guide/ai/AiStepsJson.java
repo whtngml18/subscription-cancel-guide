@@ -18,6 +18,7 @@ public class AiStepsJson {
     public static final Set<String> POSITIONS = Set.of("top-left", "top-right", "middle", "bottom");
     public static final int MAX_STEPS = 20;
     private static final int MAX_LABEL_LENGTH = 50;
+    private static final int MAX_MENUS_LENGTH = 300;
 
     private final JsonMapper jsonMapper;
 
@@ -52,13 +53,38 @@ public class AiStepsJson {
             if (step.position() == null || !POSITIONS.contains(step.position())) {
                 throw new StepParseException("버튼 위치가 정해진 값이 아니에요: " + step.position());
             }
-            steps.add(new AiStep(i + 1, screen, target, step.position()));
+            steps.add(new AiStep(i + 1, screen, target, step.position(), cleanMenus(step.otherMenus())));
         }
         return new AiStepsResult(result.service() == null ? null : result.service().strip(), steps);
     }
 
     public String write(AiStepsResult result) {
         return jsonMapper.writeValueAsString(result);
+    }
+
+    // 다른 메뉴는 그림을 채우는 보조 정보라 틀려도 거절하지 않고 다듬는다: 빈 값 제거, 50자 자르기, 줄바꿈으로 이어 300자까지
+    private List<String> cleanMenus(List<String> menus) {
+        if (menus == null) {
+            return List.of();
+        }
+        List<String> cleaned = new ArrayList<>();
+        int length = 0;
+        for (String menu : menus) {
+            if (menu == null || menu.isBlank()) {
+                continue;
+            }
+            String stripped = menu.strip();
+            if (stripped.length() > MAX_LABEL_LENGTH) {
+                stripped = stripped.substring(0, MAX_LABEL_LENGTH);
+            }
+            int added = cleaned.isEmpty() ? stripped.length() : stripped.length() + 1;
+            if (length + added > MAX_MENUS_LENGTH) {
+                break;
+            }
+            cleaned.add(stripped);
+            length += added;
+        }
+        return cleaned;
     }
 
     private String checkLabel(String value, String name) {
