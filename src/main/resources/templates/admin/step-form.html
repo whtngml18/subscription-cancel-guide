@@ -59,6 +59,17 @@
                 </div>
 
                 <div class="form-grid">
+                    <label for="otherMenus">이 화면에 보이는 다른 메뉴</label>
+                    <div>
+                        <textarea id="otherMenus" th:field="*{otherMenus}" rows="4" maxlength="300" placeholder="프로필&#10;알림"
+                                  th:attr="aria-invalid=${#fields.hasErrors('otherMenus')} ? 'true' : null,
+                                           aria-describedby=${#fields.hasErrors('otherMenus')} ? 'otherMenus-error' : 'otherMenus-help'"></textarea>
+                        <p class="field-help" id="otherMenus-help">한 줄에 하나씩 적어요. 모르면 비워 두세요. 그림에 회색 줄로 나와요.</p>
+                        <p class="field-error" id="otherMenus-error" th:if="${#fields.hasErrors('otherMenus')}" th:errors="*{otherMenus}">오류</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
                     <label for="description">설명</label>
                     <div>
                         <textarea id="description" th:field="*{description}" rows="2" maxlength="500" placeholder="메뉴에서 계정을 눌러요."
@@ -78,18 +89,47 @@
         <section aria-label="미리보기">
             <h2 style="margin-top: 0">미리보기</h2>
             <p class="muted">사용자 화면에서는 이렇게 누를 곳을 보여 줘요.</p>
-            <div id="phonePreview" th:replace="~{fragments/steps :: miniPhone(${form.position}, ${subscription.brandColor})}"></div>
+            <div id="phonePreview" th:replace="~{fragments/steps :: miniPhone(${form}, ${subscription.brandColor})}"></div>
         </section>
     </div>
 </main>
 
 <script>
-    // 버튼 위치를 바꾸면 미리보기의 점 위치도 바로 바꾼다
+    // 입력할 때마다 미리보기 그림을 다시 채운다. 줄 배치 규칙은 PhoneRows.of와 같다.
     (function () {
-        var select = document.getElementById('position');
         var phone = document.querySelector('[aria-label="미리보기"] .mini-phone');
-        select.addEventListener('change', function () {
-            phone.className = phone.className.replace(/\bpos-[\w-]+/, 'pos-' + (select.value || 'middle'));
+        var title = phone.querySelector('.phone-title');
+        var rows = phone.querySelectorAll('.phone-rows li');
+        var fields = ['screenName', 'targetLabel', 'position', 'otherMenus'].map(function (id) {
+            return document.getElementById(id);
+        });
+
+        function targetIndex(position) {
+            if (position === 'top-left' || position === 'top-right') return 0;
+            if (position === 'bottom') return 4;
+            return 2;
+        }
+
+        function render() {
+            var screen = fields[0].value.trim();
+            var target = fields[1].value.trim();
+            var index = targetIndex(fields[2].value);
+            var menus = fields[3].value.split('\n')
+                .map(function (menu) { return menu.trim(); })
+                .filter(function (menu) { return menu !== '' && menu !== target; });
+
+            title.textContent = screen;
+            phone.setAttribute('aria-label', screen + ' 화면에서 ' + target + '을(를) 누르세요');
+            for (var i = 0; i < rows.length; i++) {
+                var label = i === index ? '> ' + target : (menus.shift() || '');
+                rows[i].textContent = label;
+                rows[i].className = i === index ? 'row row-target' : (label === '' ? 'row row-blank' : 'row');
+            }
+        }
+
+        fields.forEach(function (field) {
+            field.addEventListener('input', render);
+            field.addEventListener('change', render);
         });
     })();
 </script>

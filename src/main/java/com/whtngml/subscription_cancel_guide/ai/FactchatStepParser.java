@@ -30,9 +30,10 @@ public class FactchatStepParser implements StepParser {
             2. 한 단계는 "어느 화면에서 어떤 버튼을 누르는지" 하나야.
             3. screen은 그 단계의 화면 이름, target은 누를 버튼이나 메뉴 이름이야. 둘 다 글에 나온 표현을 쓰고 50자를 넘기지 마.
             4. position은 버튼이 화면 어디쯤 있는지야. top-left, top-right, middle, bottom 중 하나만 써. 글에 위치가 없으면 middle.
-            5. order는 1부터 차례대로 매겨. 단계는 20개까지야.
-            6. 아래 형식의 JSON으로만 답해. 설명이나 코드 블록 표시는 쓰지 마.
-            {"service":"서비스 이름","steps":[{"order":1,"screen":"화면 이름","target":"누를 버튼","position":"top-right"}]}
+            5. otherMenus는 그 화면에 target 말고 보이는 다른 메뉴 이름 목록이야. 글에 실제로 나온 이름만 넣고 지어내지 마. 없으면 [].
+            6. order는 1부터 차례대로 매겨. 단계는 20개까지야.
+            7. 아래 형식의 JSON으로만 답해. 설명이나 코드 블록 표시는 쓰지 마.
+            {"service":"서비스 이름","steps":[{"order":1,"screen":"화면 이름","target":"누를 버튼","position":"top-right","otherMenus":["다른 메뉴"]}]}
             """;
 
     private final RestClient restClient;
