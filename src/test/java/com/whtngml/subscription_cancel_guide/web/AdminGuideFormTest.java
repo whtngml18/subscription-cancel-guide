@@ -21,11 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.EnumSet;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -153,5 +155,12 @@ class AdminGuideFormTest {
                 .andExpect(content().string(containsString("다른 메뉴는 300자까지 쓸 수 있어요.")));
 
         assertTrue(stepNine().isEmpty());
+    }
+
+    @Test
+    void newStepPreviewHasNoNull() throws Exception {
+        mvc.perform(get("/admin/guides/{id}/steps/new", netflix().getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("null"))));
     }
 }

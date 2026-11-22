@@ -616,9 +616,11 @@ img.svc-icon {
     color: var(--muted);
 }
 
+/* 밝은 브랜드 색(노랑 등)에서도 읽히도록 글자는 본문 색, 서비스 색은 테두리로 */
 .phone-rows .row-target {
-    background: var(--brand);
-    color: #fff;
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+    color: var(--text);
     font-weight: 800;
 }
 

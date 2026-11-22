@@ -23,7 +23,7 @@
 
 <!-- 실제 앱 화면처럼 보이지 않도록 단순한 목록으로만 그린다. 회색 줄은 이름을 모르는 메뉴 -->
 <div th:fragment="miniPhone(step, color)" class="mini-phone" role="img"
-     th:attr="aria-label=${step.screenName} + ' 화면에서 ' + ${step.targetLabel} + '을(를) 누르세요'"
+     th:attr="aria-label=${step.screenName ?: ''} + ' 화면에서 ' + ${step.targetLabel ?: ''} + '을(를) 누르세요'"
      th:style="${#strings.isEmpty(color)} ? null : '--brand: ' + ${color}">
     <span class="phone-title" aria-hidden="true" th:text="${step.screenName}">화면</span>
     <ul class="phone-rows" aria-hidden="true">
