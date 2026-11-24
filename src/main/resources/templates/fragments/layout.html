@@ -84,6 +84,7 @@
                     class="badge" th:if="${pendingCount != null and pendingCount > 0}"
                     th:text="${pendingCount}">3</span><span class="visually-hidden"
                     th:if="${pendingCount != null and pendingCount > 0}">건 대기</span></a>
+            <a th:href="@{/admin/categories}" th:attr="aria-current=${adminMenu == 'categories'} ? 'page' : null">카테고리</a>
             <a th:href="@{/}">사이트 보기</a>
         </nav>
         <form th:action="@{/admin/logout}" method="post">

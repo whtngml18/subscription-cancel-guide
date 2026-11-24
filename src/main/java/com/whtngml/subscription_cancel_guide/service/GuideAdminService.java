@@ -26,6 +26,7 @@ import java.util.List;
 public class GuideAdminService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
     private final SubscriptionRepository subscriptionRepository;
     private final GuideStepRepository guideStepRepository;
     private final FeedbackRepository feedbackRepository;
@@ -48,7 +49,7 @@ public class GuideAdminService {
     @Transactional
     public Long createSubscription(SubscriptionForm form, IconImage icon) {
         Subscription subscription = new Subscription(
-                getCategory(form.getCategoryId()),
+                getCategory(form),
                 form.getName(),
                 form.getSlug(),
                 form.getBrandColor(),
@@ -63,7 +64,7 @@ public class GuideAdminService {
     public void updateSubscription(Long id, SubscriptionForm form, IconImage icon) {
         Subscription subscription = getSubscription(id);
         subscription.update(
-                getCategory(form.getCategoryId()),
+                getCategory(form),
                 form.getName(),
                 form.getSlug(),
                 form.getBrandColor(),
@@ -155,8 +156,12 @@ public class GuideAdminService {
         guideStepRepository.delete(getStep(subscriptionId, stepId));
     }
 
-    private Category getCategory(Long categoryId) {
-        return categoryRepository.findById(categoryId)
+    // 새 카테고리면 서비스 저장과 같은 트랜잭션에서 만든다 (서비스 저장이 실패하면 함께 취소된다)
+    private Category getCategory(SubscriptionForm form) {
+        if (form.isNewCategory()) {
+            return categoryService.create(form.getNewCategoryName(), form.getNewCategorySlug());
+        }
+        return categoryRepository.findById(form.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("없는 카테고리예요."));
     }
 }

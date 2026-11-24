@@ -2,6 +2,9 @@
 INSERT INTO category (name, slug) VALUES ('OTT', 'ott');
 INSERT INTO category (name, slug) VALUES ('음악', 'music');
 INSERT INTO category (name, slug) VALUES ('쇼핑 멤버십', 'shopping');
+INSERT INTO category (name, slug) VALUES ('AI·생산성', 'ai');
+INSERT INTO category (name, slug) VALUES ('배달·생활', 'life');
+INSERT INTO category (name, slug) VALUES ('기타', 'etc');
 
 -- 구독 서비스
 INSERT INTO subscription (category_id, name, slug, brand_color, refund_info, verified_at, source, channels, difficulty, official_cancel_url, estimated_minutes, caution)

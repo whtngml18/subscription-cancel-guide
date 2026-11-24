@@ -10,6 +10,7 @@ import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
+import com.whtngml.subscription_cancel_guide.service.CategoryService;
 import com.whtngml.subscription_cancel_guide.service.FeedbackService;
 import com.whtngml.subscription_cancel_guide.service.GuideAdminService;
 import com.whtngml.subscription_cancel_guide.service.SubmissionService;
@@ -44,6 +45,7 @@ public class AdminGuideController {
     private final SubscriptionRepository subscriptionRepository;
     private final CategoryRepository categoryRepository;
     private final GuideAdminService guideAdminService;
+    private final CategoryService categoryService;
     private final FeedbackService feedbackService;
     private final SubmissionService submissionService;
 
@@ -75,7 +77,7 @@ public class AdminGuideController {
                                      BindingResult bindingResult,
                                      Model model,
                                      RedirectAttributes redirectAttributes) {
-        checkCategory(form, bindingResult);
+        categoryService.checkChoice(form, bindingResult);
         checkSlug(form, null, bindingResult);
         IconImage icon = storeIcon(form, bindingResult);
         if (bindingResult.hasErrors()) {
@@ -103,7 +105,7 @@ public class AdminGuideController {
                                      Model model,
                                      RedirectAttributes redirectAttributes) {
         Subscription subscription = guideAdminService.getSubscription(id);
-        checkCategory(form, bindingResult);
+        categoryService.checkChoice(form, bindingResult);
         checkSlug(form, id, bindingResult);
         IconImage icon = storeIcon(form, bindingResult);
         if (bindingResult.hasErrors()) {
@@ -220,12 +222,6 @@ public class AdminGuideController {
         } catch (IconValidationException e) {
             bindingResult.rejectValue("iconFile", "icon", e.getMessage());
             return null;
-        }
-    }
-
-    private void checkCategory(SubscriptionForm form, BindingResult bindingResult) {
-        if (!bindingResult.hasFieldErrors("categoryId") && !categoryRepository.existsById(form.getCategoryId())) {
-            bindingResult.rejectValue("categoryId", "notFound", "없는 카테고리예요. 다시 골라 주세요.");
         }
     }
 
