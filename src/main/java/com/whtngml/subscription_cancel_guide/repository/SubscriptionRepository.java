@@ -26,6 +26,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     boolean existsBySlug(String slug);
 
+    long countByCategory(Category category);
+
     // 이 아이콘이 서비스에 연결돼 있는지 (공개 /icons/{id}에서 확인)
     boolean existsByIcon_Id(Long iconId);
 

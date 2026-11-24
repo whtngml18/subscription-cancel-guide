@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: adminHead('카테고리 관리 | 구독 해지 가이드')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: adminHeader}"></header>
+
+<main class="wrap-wide">
+    <div class="page-bar">
+        <h1>카테고리 관리</h1>
+    </div>
+
+    <p class="alert-success" th:if="${message}" th:text="${message}">알림</p>
+
+    <div class="cols-2">
+        <div class="table-wrap">
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th scope="col">이름</th>
+                    <th scope="col">주소</th>
+                    <th scope="col">서비스</th>
+                    <th scope="col"><span class="visually-hidden">관리</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${rows}">
+                    <td th:text="${row.category.name}">OTT</td>
+                    <td class="muted" th:text="${row.category.slug}">ott</td>
+                    <td th:text="${row.serviceCount} + '개'">3개</td>
+                    <td class="actions">
+                        <a class="btn btn-secondary btn-sm" th:href="@{/admin/categories/{id}/edit(id=${row.category.id})}"
+                           th:attr="aria-label=${row.category.name} + ' 이름 고치기'">이름 고치기</a>
+                        <form th:if="${row.serviceCount == 0}"
+                              th:action="@{/admin/categories/{id}/delete(id=${row.category.id})}" method="post"
+                              style="display: inline" onsubmit="return confirm('이 카테고리를 지울까요?');">
+                            <button class="btn btn-danger btn-sm" type="submit"
+                                    th:attr="aria-label=${row.category.name} + ' 지우기'">지우기</button>
+                        </form>
+                        <span class="muted" th:unless="${row.serviceCount == 0}">지울 수 없음</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <form th:action="@{/admin/categories}" th:object="${form}" method="post">
+            <fieldset class="form-section">
+                <legend>새 카테고리</legend>
+                <div class="form-grid">
+                    <label for="name">이름</label>
+                    <div>
+                        <input type="text" maxlength="30" id="name" th:field="*{name}" placeholder="배달·생활"
+                               th:attr="aria-invalid=${#fields.hasErrors('name')} ? 'true' : null,
+                                        aria-describedby=${#fields.hasErrors('name')} ? 'name-error' : null">
+                        <p class="field-error" id="name-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">오류</p>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <label for="slug">주소</label>
+                    <div>
+                        <input type="text" maxlength="30" id="slug" th:field="*{slug}" placeholder="life"
+                               th:attr="aria-invalid=${#fields.hasErrors('slug')} ? 'true' : null,
+                                        aria-describedby=${#fields.hasErrors('slug')} ? 'slug-error' : 'slug-help'">
+                        <p class="field-help" id="slug-help">영어 소문자, 숫자, -만. 만든 뒤에는 바꿀 수 없어요.</p>
+                        <p class="field-error" id="slug-error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">오류</p>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="btn-row">
+                <button class="btn btn-primary" type="submit">추가</button>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

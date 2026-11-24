@@ -244,4 +244,26 @@ class PublicPagesTest {
                 .andExpect(content().string(containsString("프로필")))
                 .andExpect(content().string(containsString("설정 화면에서 멤버십 해지을(를) 누르세요")));
     }
+
+    @Test
+    void emptyCategoryHidden() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(content().string(containsString("/category/ott")))
+                .andExpect(content().string(not(containsString("/category/etc"))));
+        mvc.perform(get("/category/etc"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/sitemap.xml"))
+                .andExpect(content().string(not(containsString("/category/etc"))));
+    }
+
+    @Test
+    void categoryAppearsWithService() throws Exception {
+        Category etc = categoryRepository.findBySlug("etc").orElseThrow();
+        subscriptionRepository.save(new Subscription(etc, "Test", "test-svc", null, null, null));
+
+        mvc.perform(get("/"))
+                .andExpect(content().string(containsString("/category/etc")));
+        mvc.perform(get("/category/etc"))
+                .andExpect(status().isOk());
+    }
 }

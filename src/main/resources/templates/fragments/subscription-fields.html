@@ -18,10 +18,43 @@
                                  aria-describedby=${#fields.hasErrors('categoryId')} ? 'categoryId-error' : null">
                     <option value="">선택하세요</option>
                     <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">카테고리</option>
+                    <option value="0">+ 새 카테고리</option>
                 </select>
                 <p class="field-error" id="categoryId-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">오류</p>
             </div>
         </div>
+
+        <!-- "+ 새 카테고리"를 골랐을 때만 보인다. 스크립트가 없으면 늘 보인다. -->
+        <div id="newCategoryFields">
+            <div class="form-grid">
+                <label for="newCategoryName">새 카테고리 이름</label>
+                <div>
+                    <input type="text" id="newCategoryName" th:field="*{newCategoryName}" maxlength="30" placeholder="배달·생활"
+                           th:attr="aria-invalid=${#fields.hasErrors('newCategoryName')} ? 'true' : null,
+                                    aria-describedby=${#fields.hasErrors('newCategoryName')} ? 'newCategoryName-error' : null">
+                    <p class="field-error" id="newCategoryName-error" th:if="${#fields.hasErrors('newCategoryName')}" th:errors="*{newCategoryName}">오류</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <label for="newCategorySlug">새 카테고리 주소</label>
+                <div>
+                    <input type="text" id="newCategorySlug" th:field="*{newCategorySlug}" maxlength="30" placeholder="delivery"
+                           th:attr="aria-invalid=${#fields.hasErrors('newCategorySlug')} ? 'true' : null,
+                                    aria-describedby=${#fields.hasErrors('newCategorySlug')} ? 'newCategorySlug-error' : 'newCategorySlug-help'">
+                    <p class="field-help" id="newCategorySlug-help">영어 소문자, 숫자, -. 만든 뒤에는 바꿀 수 없어요.</p>
+                    <p class="field-error" id="newCategorySlug-error" th:if="${#fields.hasErrors('newCategorySlug')}" th:errors="*{newCategorySlug}">오류</p>
+                </div>
+            </div>
+        </div>
+        <script>
+            (function () {
+                var select = document.getElementById('categoryId');
+                var fields = document.getElementById('newCategoryFields');
+                function toggle() { fields.hidden = select.value !== '0'; }
+                select.addEventListener('change', toggle);
+                toggle();
+            })();
+        </script>
 
         <div class="form-grid">
             <label for="name">서비스 이름</label>

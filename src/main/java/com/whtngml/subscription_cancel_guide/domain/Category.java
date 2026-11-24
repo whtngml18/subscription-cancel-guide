@@ -23,4 +23,9 @@ public class Category{
         this.name = name;
         this.slug = slug;
     }
+
+    // 주소(slug)는 바꾸지 않고 이름만 고친다
+    public void rename(String name){
+        this.name = name;
+    }
 }

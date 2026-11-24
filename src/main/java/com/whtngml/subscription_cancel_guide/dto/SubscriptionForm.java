@@ -22,8 +22,20 @@ import java.util.Set;
 @Setter
 public class SubscriptionForm {
 
+    // 카테고리 칸에서 "+ 새 카테고리"를 고르면 이 값이 온다
+    public static final Long NEW_CATEGORY_ID = 0L;
+
     @NotNull(message = "카테고리를 골라 주세요.")
     private Long categoryId;
+
+    // 새 카테고리일 때만 쓴다. 검사는 CategoryService.checkChoice가 CategoryForm 규칙으로 한다.
+    private String newCategoryName;
+
+    private String newCategorySlug;
+
+    public boolean isNewCategory() {
+        return NEW_CATEGORY_ID.equals(categoryId);
+    }
 
     @NotBlank(message = "서비스 이름을 입력해 주세요.")
     @Size(max = 50, message = "서비스 이름은 50자까지 쓸 수 있어요.")

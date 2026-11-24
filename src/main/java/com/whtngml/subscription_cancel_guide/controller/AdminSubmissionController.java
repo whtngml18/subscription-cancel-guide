@@ -6,6 +6,7 @@ import com.whtngml.subscription_cancel_guide.service.IconService;
 import com.whtngml.subscription_cancel_guide.service.IconValidationException;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
+import com.whtngml.subscription_cancel_guide.service.CategoryService;
 import com.whtngml.subscription_cancel_guide.service.GuideAdminService;
 import com.whtngml.subscription_cancel_guide.service.SubmissionService;
 import jakarta.validation.Valid;
@@ -44,6 +45,7 @@ public class AdminSubmissionController {
     private final SubmissionService submissionService;
     private final GuideAdminService guideAdminService;
     private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
     // ---------- 검토 대기 목록 ----------
 
@@ -78,9 +80,7 @@ public class AdminSubmissionController {
                                Model model,
                                RedirectAttributes redirectAttributes) {
         Submission submission = submissionService.getSubmission(id);
-        if (!bindingResult.hasFieldErrors("categoryId") && !categoryRepository.existsById(form.getCategoryId())) {
-            bindingResult.rejectValue("categoryId", "notFound", "없는 카테고리예요. 다시 골라 주세요.");
-        }
+        categoryService.checkChoice(form, bindingResult);
         if (!bindingResult.hasFieldErrors("slug") && guideAdminService.isSlugTaken(form.getSlug(), null)) {
             bindingResult.rejectValue("slug", "duplicate", "이미 쓰고 있는 slug예요.");
         }
