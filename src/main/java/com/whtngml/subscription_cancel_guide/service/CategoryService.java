@@ -1,13 +1,18 @@
 package com.whtngml.subscription_cancel_guide.service;
 
 import com.whtngml.subscription_cancel_guide.domain.Category;
+import com.whtngml.subscription_cancel_guide.dto.CategoryForm;
+import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.CategoryRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -20,6 +25,7 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final Validator validator;
 
     // 관리 페이지 한 줄: 카테고리와 그 안의 서비스 개수
     public record CategoryRow(Category category, long serviceCount) {
@@ -59,5 +65,31 @@ public class CategoryService {
         }
         categoryRepository.delete(category);
         return true;
+    }
+
+    // 서비스 폼의 카테고리 칸 검사: 고른 카테고리가 있는지, 새 카테고리면 이름·주소 규칙과 주소 중복
+    public void checkChoice(SubscriptionForm form, BindingResult result) {
+        if (result.hasFieldErrors("categoryId")) {
+            return;
+        }
+        if (!form.isNewCategory()) {
+            if (!categoryRepository.existsById(form.getCategoryId())) {
+                result.rejectValue("categoryId", "notFound", "없는 카테고리예요. 다시 골라 주세요.");
+            }
+            return;
+        }
+
+        CategoryForm category = new CategoryForm();
+        category.setName(form.getNewCategoryName());
+        category.setSlug(form.getNewCategorySlug());
+        for (ConstraintViolation<CategoryForm> v : validator.validate(category)) {
+            String field = v.getPropertyPath().toString().equals("name") ? "newCategoryName" : "newCategorySlug";
+            if (!result.hasFieldErrors(field)) {
+                result.rejectValue(field, "invalid", v.getMessage());
+            }
+        }
+        if (!result.hasFieldErrors("newCategorySlug") && isSlugTaken(form.getNewCategorySlug())) {
+            result.rejectValue("newCategorySlug", "duplicate", "이미 있는 주소예요.");
+        }
     }
 }
