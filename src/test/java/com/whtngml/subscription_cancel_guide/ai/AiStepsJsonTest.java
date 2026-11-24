@@ -27,8 +27,8 @@ class AiStepsJsonTest {
 
         assertThat(result.service()).isEqualTo("넷플릭스");
         assertThat(result.steps()).containsExactly(
-                new AiStep(1, "홈", "프로필", "top-right", List.of()),
-                new AiStep(2, "계정", "멤버십 해지", "middle", List.of()));
+                new AiStep(1, "홈", "프로필", "top-right", List.of(), null, null),
+                new AiStep(2, "계정", "멤버십 해지", "middle", List.of(), null, null));
     }
 
     @Test
@@ -61,7 +61,7 @@ class AiStepsJsonTest {
 
     @Test
     void 쓴_JSON을_다시_읽으면_같다() {
-        AiStepsResult result = new AiStepsResult("넷플릭스", List.of(new AiStep(1, "홈", "프로필", "top-right", List.of())));
+        AiStepsResult result = new AiStepsResult("넷플릭스", List.of(new AiStep(1, "홈", "프로필", "top-right", List.of(), null, null)));
 
         assertThat(aiStepsJson.read(aiStepsJson.write(result))).isEqualTo(result);
     }
@@ -101,8 +101,35 @@ class AiStepsJsonTest {
 
     @Test
     void 폼으로_바꿀_때_메뉴를_줄바꿈으로_잇는다() {
-        assertThat(new AiStep(1, "설정", "해지", "middle", List.of("프로필", "알림")).toForm().getOtherMenus())
+        assertThat(new AiStep(1, "설정", "해지", "middle", List.of("프로필", "알림"), null, null).toForm().getOtherMenus())
                 .isEqualTo("프로필\n알림");
-        assertThat(new AiStep(1, "설정", "해지", "middle", List.of()).toForm().getOtherMenus()).isNull();
+        assertThat(new AiStep(1, "설정", "해지", "middle", List.of(), null, null).toForm().getOtherMenus()).isNull();
+    }
+
+    @Test
+    void image와_note는_1부에서_null() {
+        AiStepsResult result = aiStepsJson.read("""
+                {"steps":[{"order":1,"screen":"홈","target":"프로필","position":"top-right","image":2,"note":"다름"}]}""");
+
+        assertThat(result.steps().getFirst().image()).isNull();
+        assertThat(result.steps().getFirst().note()).isNull();
+    }
+
+    @Test
+    void 개인정보_메뉴는_빼고_단계는_뺀다() {
+        AiStepsResult result = aiStepsJson.read("""
+                {"steps":[
+                  {"order":1,"screen":"홈","target":"프로필","position":"top-right","otherMenus":["계정","me@test.com"]},
+                  {"order":2,"screen":"계정","target":"010-1234-5678","position":"middle"}
+                ]}""");
+
+        assertThat(result.steps()).containsExactly(new AiStep(1, "홈", "프로필", "top-right", List.of("계정"), null, null));
+    }
+
+    @Test
+    void 모두_개인정보면_거절() {
+        assertThatThrownBy(() -> aiStepsJson.read("""
+                {"steps":[{"order":1,"screen":"me@test.com","target":"해지","position":"middle"}]}"""))
+                .isInstanceOf(StepParseException.class);
     }
 }
