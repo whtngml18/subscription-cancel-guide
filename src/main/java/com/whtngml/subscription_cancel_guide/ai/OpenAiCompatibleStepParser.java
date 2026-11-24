@@ -16,10 +16,10 @@ import org.springframework.web.client.RestClientException;
 import java.time.Duration;
 import java.util.List;
 
-// 학교 factchat API Gateway(OpenAI 호환 Chat Completions)로 단계를 나눈다
+// OpenAI 호환 Chat Completions 주소(기본 Google Gemini, 학교 factchat도 가능)로 단계를 나눈다
 @Slf4j
 @Component
-public class FactchatStepParser implements StepParser {
+public class OpenAiCompatibleStepParser implements StepParser {
 
     private static final int MAX_ATTEMPTS = 2;
 
@@ -40,21 +40,26 @@ public class FactchatStepParser implements StepParser {
     private final AiStepsJson aiStepsJson;
     private final String apiKey;
     private final String model;
+    // 학교 factchat 게이트웨이는 주소 끝에 /가 있어야 한다
+    private final boolean trailingSlash;
 
     @Autowired
-    public FactchatStepParser(AiStepsJson aiStepsJson,
+    public OpenAiCompatibleStepParser(AiStepsJson aiStepsJson,
                               @Value("${app.ai.base-url}") String baseUrl,
                               @Value("${app.ai.api-key}") String apiKey,
-                              @Value("${app.ai.model}") String model) {
-        this(createRestClient(baseUrl, apiKey), aiStepsJson, apiKey, model);
+                              @Value("${app.ai.model}") String model,
+                              @Value("${app.ai.trailing-slash:false}") boolean trailingSlash) {
+        this(createRestClient(baseUrl, apiKey), aiStepsJson, apiKey, model, trailingSlash);
     }
 
     // 테스트에서 가짜 서버에 연결한 RestClient를 넣을 때 쓴다
-    FactchatStepParser(RestClient restClient, AiStepsJson aiStepsJson, String apiKey, String model) {
+    OpenAiCompatibleStepParser(RestClient restClient, AiStepsJson aiStepsJson, String apiKey, String model,
+                               boolean trailingSlash) {
         this.restClient = restClient;
         this.aiStepsJson = aiStepsJson;
         this.apiKey = apiKey;
         this.model = model;
+        this.trailingSlash = trailingSlash;
     }
 
     private static RestClient createRestClient(String baseUrl, String apiKey) {
@@ -80,8 +85,9 @@ public class FactchatStepParser implements StepParser {
         }
 
         ChatRequest request = new ChatRequest(model, List.of(
-                new ChatMessage("system", SYSTEM_PROMPT),
-                new ChatMessage("user", "서비스: " + serviceName + "\n해지 방법 글:\n" + rawText)
+                new RequestMessage("system", SYSTEM_PROMPT),
+                new RequestMessage("user", List.of(
+                        new TextPart("text", "서비스: " + serviceName + "\n해지 방법 글:\n" + rawText)))
         ), 0.0, 2000);
 
         StepParseException lastError = null;
@@ -101,7 +107,7 @@ public class FactchatStepParser implements StepParser {
         ChatResponse response;
         try {
             response = restClient.post()
-                    .uri("/chat/completions/")
+                    .uri(trailingSlash ? "/chat/completions/" : "/chat/completions")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .retrieve()
@@ -134,8 +140,15 @@ public class FactchatStepParser implements StepParser {
 
     // ---------- OpenAI 호환 요청·응답 형식 ----------
 
-    record ChatRequest(String model, List<ChatMessage> messages, double temperature,
+    record ChatRequest(String model, List<RequestMessage> messages, double temperature,
                        @JsonProperty("max_tokens") int maxTokens) {
+    }
+
+    // 보내는 메시지. content는 문자열(system) 또는 내용 조각 목록(user: 글, 2부에서 이미지)
+    record RequestMessage(String role, Object content) {
+    }
+
+    record TextPart(String type, String text) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
