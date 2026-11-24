@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: adminHead(${category.name} + ' 이름 고치기 | 구독 해지 가이드')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: adminHeader}"></header>
+
+<main class="wrap-wide">
+    <nav class="breadcrumb" aria-label="위치">
+        <ol>
+            <li><a th:href="@{/admin/categories}">카테고리 관리</a></li>
+            <li aria-current="page">이름 고치기</li>
+        </ol>
+    </nav>
+
+    <h1 th:text="${category.name} + ' 이름 고치기'">이름 고치기</h1>
+
+    <form th:action="@{/admin/categories/{id}/edit(id=${category.id})}" th:object="${form}" method="post">
+        <fieldset class="form-section">
+            <legend>카테고리</legend>
+            <div class="form-grid">
+                <label for="name">이름</label>
+                <div>
+                    <input type="text" maxlength="30" id="name" th:field="*{name}"
+                           th:attr="aria-invalid=${#fields.hasErrors('name')} ? 'true' : null,
+                                    aria-describedby=${#fields.hasErrors('name')} ? 'name-error' : null">
+                    <p class="field-error" id="name-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">오류</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <span class="label">주소</span>
+                <div>
+                    <p style="margin: 8px 0 0" th:text="'/category/' + ${category.slug}">/category/ott</p>
+                    <p class="field-help">주소는 바꿀 수 없어요.</p>
+                </div>
+            </div>
+        </fieldset>
+        <div class="btn-row">
+            <button class="btn btn-primary" type="submit">저장</button>
+            <a class="btn btn-secondary" th:href="@{/admin/categories}">취소</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>
