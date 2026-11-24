@@ -48,7 +48,7 @@ class AdminCategoryTest {
         mvc.perform(get("/admin/categories"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("쇼핑 멤버십")))
-                .andExpect(content().string(containsString("서비스 ")))
+                .andExpect(content().string(containsString("지울 수 없음")))
                 .andExpect(content().string(containsString("action=\"/admin/categories\"")));
     }
 

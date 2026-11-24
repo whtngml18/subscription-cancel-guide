@@ -35,6 +35,10 @@ public class CategoryController {
                            Model model) {
         Category category = categoryRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // 서비스가 없는 카테고리는 사용자에게 보이지 않는다
+        if (subscriptionRepository.countByCategory(category) == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
 
         Pageable pageable = PageRequest.of(
                 Math.max(page, 0),
