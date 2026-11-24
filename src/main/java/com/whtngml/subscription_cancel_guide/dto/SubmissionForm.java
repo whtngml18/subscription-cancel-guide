@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -33,4 +34,11 @@ public class SubmissionForm {
     private String caution;
 
     private MultipartFile iconFile;
+
+    // 제보 화면 "예시 넣어 보기" 틀의 빈칸. 이게 남아 있으면 틀만 보낸 것으로 본다.
+    public static final List<String> TEMPLATE_TOKENS = List.of("(어디쯤)", "(버튼 이름)", "(해지 버튼 이름)");
+
+    public boolean hasTemplateLeft() {
+        return rawText != null && TEMPLATE_TOKENS.stream().anyMatch(rawText::contains);
+    }
 }

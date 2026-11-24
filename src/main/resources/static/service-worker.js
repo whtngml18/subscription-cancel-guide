@@ -1,6 +1,6 @@
 // 서비스 워커: 인터넷이 끊겨도 안내 화면을 보여주고, CSS·아이콘을 빠르게 불러온다.
 // 저장할 파일이 바뀌면 CACHE_NAME의 숫자를 올린다. 그러면 예전 저장본은 지워진다.
-const CACHE_NAME = 'cancel-guide-v2';
+const CACHE_NAME = 'cancel-guide-v3';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE_URLS = [
