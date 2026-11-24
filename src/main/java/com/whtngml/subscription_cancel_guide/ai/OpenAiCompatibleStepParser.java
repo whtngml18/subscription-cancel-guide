@@ -22,7 +22,7 @@ import java.util.List;
 public class OpenAiCompatibleStepParser implements StepParser {
 
     private static final int MAX_ATTEMPTS = 2;
-    // Gemini 2.5는 답하기 전에 "생각"하는 데도 이 한도를 쓴다. 넉넉하지 않으면 JSON이 중간에 잘린다.
+    // Gemini는 모델에 따라 답하기 전에 "생각"하는 데도 이 한도를 쓴다. 넉넉하지 않으면 JSON이 중간에 잘린다.
     private static final int MAX_TOKENS = 8000;
 
     private final RestClient restClient;
