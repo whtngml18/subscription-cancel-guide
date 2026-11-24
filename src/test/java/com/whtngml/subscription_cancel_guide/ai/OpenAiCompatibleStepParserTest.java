@@ -121,4 +121,22 @@ class OpenAiCompatibleStepParserTest {
         assertThat(slash.parse("넷플릭스", TEXT).steps()).hasSize(1);
         slashServer.verify();
     }
+
+    @Test
+    void 생각_토큰까지_고려해_출력_한도를_넉넉히() {
+        server.expect(once(), requestTo(URL))
+                .andExpect(jsonPath("$.max_tokens").value(8000))
+                .andRespond(withSuccess(chatResponse(GOOD), MediaType.APPLICATION_JSON));
+
+        parser.parse("넷플릭스", TEXT);
+        server.verify();
+    }
+
+    @Test
+    void 앞뒤_설명이_붙은_답도_읽는다() {
+        assertThat(OpenAiCompatibleStepParser.stripCodeFence("여기 결과예요:\n```json\n" + GOOD + "\n```\n도움이 되길!"))
+                .isEqualTo(GOOD);
+        assertThat(OpenAiCompatibleStepParser.stripCodeFence("결과: " + GOOD + " 이에요."))
+                .isEqualTo(GOOD);
+    }
 }

@@ -22,6 +22,8 @@ import java.util.List;
 public class OpenAiCompatibleStepParser implements StepParser {
 
     private static final int MAX_ATTEMPTS = 2;
+    // Gemini 2.5는 답하기 전에 "생각"하는 데도 이 한도를 쓴다. 넉넉하지 않으면 JSON이 중간에 잘린다.
+    private static final int MAX_TOKENS = 8000;
 
     private final RestClient restClient;
     private final AiStepsJson aiStepsJson;
@@ -75,7 +77,7 @@ public class OpenAiCompatibleStepParser implements StepParser {
                 new RequestMessage("system", StepPrompt.system()),
                 new RequestMessage("user", List.of(
                         new TextPart("text", "서비스: " + serviceName + "\n해지 방법 글:\n" + rawText)))
-        ), 0.0, 2000);
+        ), 0.0, MAX_TOKENS);
 
         StepParseException lastError = null;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -112,15 +114,21 @@ public class OpenAiCompatibleStepParser implements StepParser {
         return content == null ? "" : content;
     }
 
-    // 모델이 ```json ... ``` 으로 감싸서 답하는 경우가 있어 벗겨 낸다
+    // 모델이 ```json ... ``` 으로 감싸거나 앞뒤에 설명을 붙여 답하는 경우가 있어 JSON 부분만 꺼낸다
     static String stripCodeFence(String content) {
         String text = content.strip();
-        if (text.startsWith("```")) {
-            int firstLineEnd = text.indexOf('\n');
+        int fence = text.indexOf("```");
+        if (fence >= 0) {
+            int firstLineEnd = text.indexOf('\n', fence);
             int lastFence = text.lastIndexOf("```");
             if (firstLineEnd > 0 && lastFence > firstLineEnd) {
-                return text.substring(firstLineEnd + 1, lastFence).strip();
+                text = text.substring(firstLineEnd + 1, lastFence).strip();
             }
+        }
+        int start = text.indexOf('{');
+        int end = text.lastIndexOf('}');
+        if (start >= 0 && end > start) {
+            return text.substring(start, end + 1);
         }
         return text;
     }
