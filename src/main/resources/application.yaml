@@ -40,5 +40,5 @@ app:
   ai:
     base-url: ${AI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/openai}
     api-key: ${AI_API_KEY:${GEMINI_API_KEY:${FACTCHAT_API_KEY:}}}
-    model: ${AI_MODEL:gemini-2.5-flash}
+    model: ${AI_MODEL:gemini-3.5-flash-lite}
     trailing-slash: ${AI_TRAILING_SLASH:false}
