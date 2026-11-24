@@ -25,7 +25,7 @@
                 <tbody>
                 <tr th:each="row : ${rows}">
                     <td th:text="${row.category.name}">OTT</td>
-                    <td class="muted" th:text="'/category/' + ${row.category.slug}">/category/ott</td>
+                    <td class="muted" th:text="${row.category.slug}">ott</td>
                     <td th:text="${row.serviceCount} + '개'">3개</td>
                     <td class="actions">
                         <a class="btn btn-secondary btn-sm" th:href="@{/admin/categories/{id}/edit(id=${row.category.id})}"
@@ -36,8 +36,7 @@
                             <button class="btn btn-danger btn-sm" type="submit"
                                     th:attr="aria-label=${row.category.name} + ' 지우기'">지우기</button>
                         </form>
-                        <span class="muted" th:unless="${row.serviceCount == 0}"
-                              th:text="'서비스 ' + ${row.serviceCount} + '개'">서비스 3개</span>
+                        <span class="muted" th:unless="${row.serviceCount == 0}">지울 수 없음</span>
                     </td>
                 </tr>
                 </tbody>

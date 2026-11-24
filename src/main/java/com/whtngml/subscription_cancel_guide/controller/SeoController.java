@@ -32,7 +32,9 @@ public class SeoController {
 
         appendUrl(xml, "/", null);
         for (Category category : categoryRepository.findAll(Sort.by("id"))) {
-            appendUrl(xml, "/category/" + category.getSlug(), null);
+            if (subscriptionRepository.countByCategory(category) > 0) {   // 빈 카테고리는 404라 넣지 않는다
+                appendUrl(xml, "/category/" + category.getSlug(), null);
+            }
         }
         for (Subscription subscription : subscriptionRepository.findAll(Sort.by("name"))) {
             appendUrl(xml, "/guide/" + subscription.getSlug(), subscription.getVerifiedAt());
