@@ -43,7 +43,8 @@ class UploadLimitTest {
         String view = uploadLimitAdvice.tooLarge(new MaxUploadSizeExceededException(2_000_000), request, flash);
 
         assertEquals("redirect:/submit?name=x", view);
-        assertEquals("아이콘은 200KB까지 올릴 수 있어요.", flash.getFlashAttributes().get("uploadError"));
+        assertEquals("캡처는 한 장에 5MB, 제보 전체는 25MB까지 보낼 수 있어요. 캡처를 다시 골라 주세요.",
+                flash.getFlashAttributes().get("uploadError"));
     }
 
     @Test

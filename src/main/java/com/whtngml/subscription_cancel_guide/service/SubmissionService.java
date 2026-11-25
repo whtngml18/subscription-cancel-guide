@@ -4,6 +4,7 @@ import com.whtngml.subscription_cancel_guide.ai.AiStepsJson;
 import com.whtngml.subscription_cancel_guide.ai.StepParseException;
 import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Submission;
+import com.whtngml.subscription_cancel_guide.domain.SubmissionScreenshot;
 import com.whtngml.subscription_cancel_guide.domain.SubmissionStatus;
 import com.whtngml.subscription_cancel_guide.domain.Subscription;
 import com.whtngml.subscription_cancel_guide.dto.AiStep;
@@ -11,6 +12,7 @@ import com.whtngml.subscription_cancel_guide.dto.GuideStepForm;
 import com.whtngml.subscription_cancel_guide.dto.SubmissionForm;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
 import com.whtngml.subscription_cancel_guide.repository.SubmissionRepository;
+import com.whtngml.subscription_cancel_guide.repository.SubmissionScreenshotRepository;
 import com.whtngml.subscription_cancel_guide.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,25 +34,35 @@ import java.util.Optional;
 public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
+    private final SubmissionScreenshotRepository screenshots;
     private final SubscriptionRepository subscriptionRepository;
     private final GuideAdminService guideAdminService;
     private final AiStepsJson aiStepsJson;
 
     @Transactional
     public Long submit(SubmissionForm form, IconImage icon) {
+        return submit(form, icon, List.of());
+    }
+
+    @Transactional
+    public Long submit(SubmissionForm form, IconImage icon, List<byte[]> images) {
         String caution = form.getCaution() == null || form.getCaution().isBlank() ? null : form.getCaution().strip();
         Submission submission = new Submission(form.getServiceName().strip(), form.getRawText().strip(),
-                checkAiStepsJson(form.getAiStepsJson()), form.getChannels(), caution, icon);
-        return submissionRepository.save(submission).getId();
+                checkAiStepsJson(form.getAiStepsJson(), images.size()), form.getChannels(), caution, icon);
+        submissionRepository.save(submission);
+        for (int index = 0; index < images.size(); index++) {
+            screenshots.save(new SubmissionScreenshot(submission, index + 1, images.get(index)));
+        }
+        return submission.getId();
     }
 
     // 화면에서 다시 보낸 AI 단계는 바뀌었을 수 있어서 한 번 더 검사한다. 틀리면 AI 단계 없이 글만 저장한다.
-    private String checkAiStepsJson(String json) {
+    private String checkAiStepsJson(String json, int screenshotCount) {
         if (json == null || json.isBlank()) {
             return null;
         }
         try {
-            return aiStepsJson.write(aiStepsJson.read(json));
+            return aiStepsJson.write(aiStepsJson.read(json, screenshotCount));
         } catch (StepParseException e) {
             log.warn("제보의 AI 단계가 형식에 맞지 않아 버림: {}", e.getMessage());
             return null;
@@ -58,11 +71,15 @@ public class SubmissionService {
 
     // 휴대폰 도식으로 보여 주거나 단계로 저장할 AI 단계 (없으면 빈 목록)
     public List<GuideStepForm> getAiSteps(Submission submission) {
+        return getReviewSteps(submission).stream().map(AiStep::toForm).toList();
+    }
+
+    public List<AiStep> getReviewSteps(Submission submission) {
         if (submission.getAiStepsJson() == null) {
             return List.of();
         }
         try {
-            return aiStepsJson.read(submission.getAiStepsJson()).steps().stream().map(AiStep::toForm).toList();
+            return aiStepsJson.read(submission.getAiStepsJson(), SubmissionScreenshotProcessor.MAX_FILES).steps();
         } catch (StepParseException e) {
             log.warn("저장된 AI 단계를 읽지 못함 (제보 {}): {}", submission.getId(), e.getMessage());
             return List.of();
@@ -82,6 +99,25 @@ public class SubmissionService {
     public Submission getSubmission(Long id) {
         return submissionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    public List<Integer> getScreenshotOrders(Long submissionId) {
+        return screenshots.findOrders(submissionId);
+    }
+
+    public byte[] getScreenshot(Long submissionId, int order) {
+        return screenshots.findBySubmissionIdAndImageOrder(submissionId, order)
+                .map(SubmissionScreenshot::getData)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional
+    public void deleteExpiredScreenshots(LocalDateTime cutoff) {
+        for (Long id : screenshots.findExpiredSubmissionIds(SubmissionStatus.PENDING, cutoff)) {
+            submissionRepository.lockById(id)
+                    .filter(submission -> submission.isPending() && !submission.getCreatedAt().isAfter(cutoff))
+                    .ifPresent(submission -> screenshots.deleteForSubmission(id));
+        }
     }
 
     // 제보한 서비스 이름과 같은 서비스가 이미 있는지
@@ -106,6 +142,7 @@ public class SubmissionService {
         submission.approve(subscription);
         importAiSteps(submission, subscriptionId, importAiSteps);
         importDetails(submission, subscription, importDetails, importIcon && uploadedIcon == null);
+        screenshots.deleteForSubmission(submissionId);
         return subscriptionId;
     }
 
@@ -118,6 +155,7 @@ public class SubmissionService {
         submission.approve(subscription);
         importAiSteps(submission, subscription.getId(), importAiSteps);
         importDetails(submission, subscription, importDetails, importIcon);
+        screenshots.deleteForSubmission(submissionId);
         return subscription.getId();
     }
 
@@ -145,10 +183,12 @@ public class SubmissionService {
     @Transactional
     public void reject(Long submissionId) {
         getPendingSubmission(submissionId).reject();
+        screenshots.deleteForSubmission(submissionId);
     }
 
     private Submission getPendingSubmission(Long id) {
-        Submission submission = getSubmission(id);
+        Submission submission = submissionRepository.lockById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!submission.isPending()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리한 제보예요.");
         }

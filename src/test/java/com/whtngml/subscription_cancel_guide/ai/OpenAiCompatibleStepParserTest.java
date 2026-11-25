@@ -71,6 +71,27 @@ class OpenAiCompatibleStepParserTest {
     }
 
     @Test
+    void namesConfiguredPreviewProviderWithoutRevealingUrlCredentials() {
+        assertThat(OpenAiCompatibleStepParser.displayProvider("https://generativelanguage.googleapis.com/v1beta/openai"))
+                .isEqualTo("Google Gemini");
+        assertThat(OpenAiCompatibleStepParser.displayProvider("https://user:secret@example.test/api"))
+                .isEqualTo("AI 서비스 (example.test)");
+    }
+
+    @Test
+    void sendsScreenshotsAfterTextInUploadOrder() {
+        server.expect(once(), requestTo(URL))
+                .andExpect(jsonPath("$.messages[0].content").value(containsString("[캡처 읽기]")))
+                .andExpect(jsonPath("$.messages[1].content[0].type").value("text"))
+                .andExpect(jsonPath("$.messages[1].content[1].type").value("image_url"))
+                .andExpect(jsonPath("$.messages[1].content[1].image_url.url").value("data:image/jpeg;base64,AQ=="))
+                .andExpect(jsonPath("$.messages[1].content[5].image_url.url").value("data:image/jpeg;base64,BQ=="))
+                .andRespond(withSuccess(chatResponse(GOOD), MediaType.APPLICATION_JSON));
+        parser.parse("넷플릭스", TEXT, List.of(new byte[]{1}, new byte[]{2}, new byte[]{3}, new byte[]{4}, new byte[]{5}));
+        server.verify();
+    }
+
+    @Test
     void 형식이_틀리면_한_번_다시_요청한다() {
         server.expect(requestTo(URL)).andRespond(withSuccess(chatResponse("단계를 나눠 봤어요!"), MediaType.APPLICATION_JSON));
         server.expect(requestTo(URL)).andRespond(withSuccess(chatResponse(GOOD), MediaType.APPLICATION_JSON));
