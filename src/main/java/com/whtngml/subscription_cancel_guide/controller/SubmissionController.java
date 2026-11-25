@@ -55,6 +55,7 @@ public class SubmissionController {
     public String preview(@Valid @ModelAttribute("form") SubmissionForm form, BindingResult bindingResult,
                           HttpServletRequest request, Model model) {
         form.setAiStepsJson(null);
+        checkTemplate(form, bindingResult);
         if (bindingResult.hasErrors()) {
             return "submit";
         }
@@ -80,6 +81,7 @@ public class SubmissionController {
     @PostMapping
     public String submit(@Valid @ModelAttribute("form") SubmissionForm form, BindingResult bindingResult,
                          HttpServletRequest request, Model model) {
+        checkTemplate(form, bindingResult);
         if (!bindingResult.hasErrors() && !submitRateLimiter.tryAcquire(request.getRemoteAddr())) {
             form.setAiStepsJson(null);
             model.addAttribute("aiError", "제보는 1시간에 10번까지 보낼 수 있어요. 잠시 뒤 다시 보내 주세요.");
@@ -105,5 +107,11 @@ public class SubmissionController {
     @GetMapping("/done")
     public String done() {
         return "submit-done";
+    }
+
+    private void checkTemplate(SubmissionForm form, BindingResult bindingResult) {
+        if (!bindingResult.hasFieldErrors("rawText") && form.hasTemplateLeft()) {
+            bindingResult.rejectValue("rawText", "template", "괄호 안을 실제 내용으로 바꿔 주세요.");
+        }
     }
 }

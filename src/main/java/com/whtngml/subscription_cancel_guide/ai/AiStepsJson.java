@@ -46,14 +46,22 @@ public class AiStepsJson {
         sorted.sort(Comparator.comparingInt(AiStep::order));
 
         List<AiStep> steps = new ArrayList<>();
-        for (int i = 0; i < sorted.size(); i++) {
-            AiStep step = sorted.get(i);
+        for (AiStep step : sorted) {
             String screen = checkLabel(step.screen(), "화면 이름");
             String target = checkLabel(step.target(), "버튼 이름");
             if (step.position() == null || !POSITIONS.contains(step.position())) {
                 throw new StepParseException("버튼 위치가 정해진 값이 아니에요: " + step.position());
             }
-            steps.add(new AiStep(i + 1, screen, target, step.position(), cleanMenus(step.otherMenus())));
+            // 화면·버튼 이름에 개인정보가 섞인 단계는 통째로 뺀다
+            if (PersonalInfo.contains(screen) || PersonalInfo.contains(target)) {
+                continue;
+            }
+            // 캡처가 아직 없으므로 image·note는 늘 비운다
+            steps.add(new AiStep(steps.size() + 1, screen, target, step.position(), cleanMenus(step.otherMenus()),
+                    null, null));
+        }
+        if (steps.isEmpty()) {
+            throw new StepParseException("AI가 단계를 하나도 만들지 못했어요.");
         }
         return new AiStepsResult(result.service() == null ? null : result.service().strip(), steps);
     }
@@ -70,7 +78,7 @@ public class AiStepsJson {
         List<String> cleaned = new ArrayList<>();
         int length = 0;
         for (String menu : menus) {
-            if (menu == null || menu.isBlank()) {
+            if (menu == null || menu.isBlank() || PersonalInfo.contains(menu)) {
                 continue;
             }
             String stripped = menu.strip();

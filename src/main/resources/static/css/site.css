@@ -255,6 +255,31 @@ textarea {
     border-width: 2px;
 }
 
+/* 제보 화면 글쓰기 안내 */
+.write-guide {
+    margin: 0 0 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: .9375rem;
+}
+
+.write-guide-title { margin: 0 0 6px; font-weight: 700; }
+.write-guide ol { margin: 0 0 10px; padding-left: 1.25em; }
+
+.write-examples {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.write-example { padding: 8px 10px; border-radius: var(--radius); }
+.write-example p { margin: 0; }
+.write-example-label { font-weight: 600; margin-bottom: 4px !important; }
+.write-example-good { background: var(--easy-bg); }
+.write-example-bad { background: var(--bg-soft); color: var(--muted); }
+
 /* 제보 화면 "더 알려 주실 수 있나요?" 접는 칸 */
 .more {
     margin: 0 0 20px;
