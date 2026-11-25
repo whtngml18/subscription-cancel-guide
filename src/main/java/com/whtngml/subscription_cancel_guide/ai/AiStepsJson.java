@@ -19,6 +19,8 @@ public class AiStepsJson {
     public static final int MAX_STEPS = 20;
     private static final int MAX_LABEL_LENGTH = 50;
     private static final int MAX_MENUS_LENGTH = 300;
+    private static final int MAX_MENUS = 4;
+    private static final int MAX_NOTE_LENGTH = 100;
 
     private final JsonMapper jsonMapper;
 
@@ -28,6 +30,10 @@ public class AiStepsJson {
 
     // 형식이 틀리면 StepParseException. 앞뒤 공백을 지우고 order 순서로 정렬해 1부터 다시 번호를 매긴다.
     public AiStepsResult read(String json) {
+        return read(json, 0);
+    }
+
+    public AiStepsResult read(String json, int screenshotCount) {
         AiStepsResult result;
         try {
             result = jsonMapper.readValue(json, AiStepsResult.class);
@@ -43,6 +49,9 @@ public class AiStepsJson {
         }
 
         List<AiStep> sorted = new ArrayList<>(result.steps());
+        if (sorted.contains(null)) {
+            throw new StepParseException("AI 단계가 비어 있어요.");
+        }
         sorted.sort(Comparator.comparingInt(AiStep::order));
 
         List<AiStep> steps = new ArrayList<>();
@@ -50,20 +59,25 @@ public class AiStepsJson {
             String screen = checkLabel(step.screen(), "화면 이름");
             String target = checkLabel(step.target(), "버튼 이름");
             if (step.position() == null || !POSITIONS.contains(step.position())) {
-                throw new StepParseException("버튼 위치가 정해진 값이 아니에요: " + step.position());
+                throw new StepParseException("버튼 위치가 정해진 값이 아니에요.");
             }
             // 화면·버튼 이름에 개인정보가 섞인 단계는 통째로 뺀다
             if (PersonalInfo.contains(screen) || PersonalInfo.contains(target)) {
                 continue;
             }
-            // 캡처가 아직 없으므로 image·note는 늘 비운다
+            Integer image = step.image();
+            if (image != null && (image < 1 || image > screenshotCount)) {
+                image = null;
+            }
+            String note = screenshotCount > 0 ? cleanNote(step.note()) : null;
             steps.add(new AiStep(steps.size() + 1, screen, target, step.position(), cleanMenus(step.otherMenus()),
-                    null, null));
+                    image, note));
         }
         if (steps.isEmpty()) {
             throw new StepParseException("AI가 단계를 하나도 만들지 못했어요.");
         }
-        return new AiStepsResult(result.service() == null ? null : result.service().strip(), steps);
+        String service = result.service();
+        return new AiStepsResult(service == null || PersonalInfo.contains(service) ? null : service.strip(), steps);
     }
 
     public String write(AiStepsResult result) {
@@ -91,8 +105,19 @@ public class AiStepsJson {
             }
             cleaned.add(stripped);
             length += added;
+            if (cleaned.size() == MAX_MENUS) {
+                break;
+            }
         }
         return cleaned;
+    }
+
+    private String cleanNote(String note) {
+        if (note == null || note.isBlank() || PersonalInfo.contains(note)) {
+            return null;
+        }
+        String stripped = note.strip();
+        return stripped.length() <= MAX_NOTE_LENGTH ? stripped : stripped.substring(0, MAX_NOTE_LENGTH);
     }
 
     private String checkLabel(String value, String name) {

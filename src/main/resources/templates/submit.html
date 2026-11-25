@@ -11,7 +11,7 @@
     <p class="lead">직접 해지해 본 방법을 글로 알려 주세요. 관리자가 확인한 뒤 가이드로 올려요.</p>
 
     <!-- 오류가 있으면 입력 칸에 aria-invalid와 오류 문구 id(aria-describedby)를 붙여 화면 낭독기가 함께 읽게 한다 -->
-    <form th:action="@{/submit}" th:object="${form}" method="post" enctype="multipart/form-data">
+    <form id="submissionForm" th:action="@{/submit}" th:object="${form}" method="post" enctype="multipart/form-data">
         <div class="field">
             <label for="serviceName">서비스 이름</label>
             <input type="text" id="serviceName" th:field="*{serviceName}" maxlength="50" placeholder="예: 유튜브 프리미엄"
@@ -54,6 +54,27 @@
             <p class="field-help" id="rawTextCount" aria-live="polite"></p>
         </div>
 
+        <div class="field">
+            <label for="screenshots">해지 화면 캡처 (선택, 최대 5장)</label>
+            <p class="field-help" id="screenshots-help">누른 버튼이 보이는 휴대폰 전체 화면을 해지 순서대로 올려 주세요.
+                PNG, JPEG, WebP 파일을 한 장에 5MB까지 올릴 수 있어요.</p>
+            <ul class="screenshot-help">
+                <li>해지와 상관없는 화면과 모니터를 찍은 사진은 빼 주세요.</li>
+                <li>이름, 이메일, 전화번호, 카드 번호는 가려 주세요.</li>
+                <li th:if="${aiAvailable}" th:text="${'AI 미리보기를 사용하면 캡처가 분석을 위해 ' + aiProviderName + '에 전송돼요.'}">
+                    AI 미리보기를 사용하면 캡처가 분석을 위해 Google Gemini에 전송돼요.
+                </li>
+                <li>사이트에 제출된 캡처는 검토가 끝나거나 30일이 지나면 지워져요.</li>
+            </ul>
+            <input type="file" id="screenshots" name="screenshots" multiple accept="image/png,image/jpeg,image/webp"
+                   th:attr="aria-invalid=${#fields.hasErrors('screenshots')} ? 'true' : null,
+                            aria-describedby=${#fields.hasErrors('screenshots')} ? 'screenshots-error screenshots-help' : 'screenshots-help'">
+            <p class="field-error" id="screenshots-error"
+               th:if="${#fields.hasErrors('screenshots')}" th:errors="*{screenshots}">오류</p>
+            <p class="field-help" th:if="${reselectScreenshots}">캡처를 다시 골라 주세요.</p>
+            <ol class="screenshot-list" id="selectedScreenshots" hidden aria-label="선택한 캡처"></ol>
+        </div>
+
         <details class="more" th:open="${#fields.hasErrors('channels') or #fields.hasErrors('caution') or #fields.hasErrors('iconFile')}">
             <summary>더 알려 주실 수 있나요? (선택)</summary>
 
@@ -85,25 +106,28 @@
                 <p class="field-error" id="iconFile-error"
                    th:if="${#fields.hasErrors('iconFile')}" th:errors="*{iconFile}">오류</p>
                 <p class="field-help" id="iconFile-help">PNG, JPEG, WebP · 200KB까지
-                    <th:block th:if="${aiSteps != null}"><br>미리보기를 하면 고른 아이콘이 지워져요. 다시 골라 주세요.</th:block>
+                    <th:block th:if="${reselectIcon}"><br>아이콘을 다시 골라 주세요.</th:block>
                 </p>
             </div>
         </details>
 
         <input type="hidden" id="aiStepsJson" th:field="*{aiStepsJson}">
 
-        <div class="notice" role="alert" th:if="${uploadError != null}" th:text="${uploadError}">업로드 오류</div>
-        <div class="notice" role="alert" th:if="${aiError != null}" th:text="${aiError}">AI 오류</div>
+        <p class="field-help" id="previewStatus" role="status"></p>
+        <div id="aiPreviewResponse" aria-live="polite">
+            <div class="notice" role="alert" th:if="${uploadError != null}" th:text="${uploadError}">업로드 오류</div>
+            <div class="notice" role="alert" th:if="${aiError != null}" th:text="${aiError}">AI 오류</div>
 
-        <section id="aiPreview" th:if="${aiSteps != null}">
-            <h2>AI가 이렇게 나눴어요</h2>
-            <p class="muted">AI가 만든 단계라 틀릴 수 있어요. 관리자가 확인한 뒤 공개해요. 마음에 들지 않으면 글을 고치고 다시 미리보기를 누르세요.</p>
-            <ol th:replace="~{fragments/steps :: stepList(${aiSteps}, null)}"></ol>
-        </section>
+            <section id="aiPreview" th:if="${aiSteps != null}">
+                <h2>AI가 이렇게 나눴어요</h2>
+                <p class="muted">AI가 만든 단계라 틀릴 수 있어요. 관리자가 확인한 뒤 공개해요. 마음에 들지 않으면 글을 고치고 다시 미리보기를 누르세요.</p>
+                <ol th:replace="~{fragments/steps :: stepList(${aiSteps}, null)}"></ol>
+            </section>
+        </div>
 
         <div class="btn-row">
-            <button class="btn btn-primary" type="submit" th:text="${aiSteps != null} ? '이대로 제출하기' : '제출하기'">제출하기</button>
-            <button class="btn btn-secondary" type="submit" th:formaction="@{/submit/preview}"
+            <button id="sendSubmission" class="btn btn-primary" type="submit" th:text="*{aiStepsJson != null} ? '이대로 제출하기' : '제출하기'">제출하기</button>
+            <button id="previewSubmission" class="btn btn-secondary" type="submit" th:formaction="@{/submit/preview}"
                     th:if="${aiAvailable}">AI로 단계 미리보기</button>
         </div>
     </form>
@@ -113,18 +137,5 @@
 
 <script th:src="@{/js/submit-guide.js}" defer></script>
 
-<script th:if="${aiSteps != null}">
-    // 미리보기 뒤에 글을 고치면 AI 단계가 글과 달라지므로 버린다
-    (function () {
-        var hidden = document.getElementById('aiStepsJson');
-        var preview = document.getElementById('aiPreview');
-        ['serviceName', 'rawText'].forEach(function (id) {
-            document.getElementById(id).addEventListener('input', function () {
-                hidden.value = '';
-                preview.hidden = true;
-            }, { once: true });
-        });
-    })();
-</script>
 </body>
 </html>
