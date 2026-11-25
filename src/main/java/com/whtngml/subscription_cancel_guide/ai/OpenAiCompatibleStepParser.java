@@ -12,8 +12,12 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
+import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 // OpenAI 호환 Chat Completions 주소(기본 Google Gemini, 학교 factchat도 가능)로 단계를 나눈다
@@ -29,6 +33,7 @@ public class OpenAiCompatibleStepParser implements StepParser {
     private final AiStepsJson aiStepsJson;
     private final String apiKey;
     private final String model;
+    private final String providerName;
     // 학교 factchat 게이트웨이는 주소 끝에 /가 있어야 한다
     private final boolean trailingSlash;
 
@@ -38,17 +43,23 @@ public class OpenAiCompatibleStepParser implements StepParser {
                               @Value("${app.ai.api-key}") String apiKey,
                               @Value("${app.ai.model}") String model,
                               @Value("${app.ai.trailing-slash:false}") boolean trailingSlash) {
-        this(createRestClient(baseUrl, apiKey), aiStepsJson, apiKey, model, trailingSlash);
+        this(createRestClient(baseUrl, apiKey), aiStepsJson, apiKey, model, trailingSlash, displayProvider(baseUrl));
     }
 
     // 테스트에서 가짜 서버에 연결한 RestClient를 넣을 때 쓴다
     OpenAiCompatibleStepParser(RestClient restClient, AiStepsJson aiStepsJson, String apiKey, String model,
                                boolean trailingSlash) {
+        this(restClient, aiStepsJson, apiKey, model, trailingSlash, "설정된 AI 서비스");
+    }
+
+    private OpenAiCompatibleStepParser(RestClient restClient, AiStepsJson aiStepsJson, String apiKey, String model,
+                                       boolean trailingSlash, String providerName) {
         this.restClient = restClient;
         this.aiStepsJson = aiStepsJson;
         this.apiKey = apiKey;
         this.model = model;
         this.trailingSlash = trailingSlash;
+        this.providerName = providerName;
     }
 
     private static RestClient createRestClient(String baseUrl, String apiKey) {
@@ -68,24 +79,42 @@ public class OpenAiCompatibleStepParser implements StepParser {
     }
 
     @Override
-    public AiStepsResult parse(String serviceName, String rawText) {
+    public String providerName() {
+        return providerName;
+    }
+
+    static String displayProvider(String baseUrl) {
+        String host = URI.create(baseUrl).getHost();
+        if ("generativelanguage.googleapis.com".equalsIgnoreCase(host)) {
+            return "Google Gemini";
+        }
+        return host == null ? "설정된 AI 서비스" : "AI 서비스 (" + host + ")";
+    }
+
+    @Override
+    public AiStepsResult parse(String serviceName, String rawText, List<byte[]> screenshots) {
         if (!isAvailable()) {
             throw new StepParseException("지금은 AI 변환을 쓸 수 없어요.");
         }
 
+        List<Object> parts = new ArrayList<>();
+        parts.add(new TextPart("text", "서비스: " + serviceName + "\n해지 방법 글:\n" + rawText));
+        for (byte[] screenshot : screenshots) {
+            String url = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(screenshot);
+            parts.add(new ImagePart("image_url", new ImageUrl(url)));
+        }
         ChatRequest request = new ChatRequest(model, List.of(
-                new RequestMessage("system", StepPrompt.system()),
-                new RequestMessage("user", List.of(
-                        new TextPart("text", "서비스: " + serviceName + "\n해지 방법 글:\n" + rawText)))
+                new RequestMessage("system", StepPrompt.system(!screenshots.isEmpty())),
+                new RequestMessage("user", parts)
         ), 0.0, MAX_TOKENS);
 
         StepParseException lastError = null;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             String content = call(request);
             try {
-                return aiStepsJson.read(stripCodeFence(content));
+                return aiStepsJson.read(stripCodeFence(content), screenshots.size());
             } catch (StepParseException e) {
-                log.warn("AI 응답 형식 오류 ({}번째): {} / 응답: {}", attempt, e.getMessage(), content);
+                log.warn("AI 응답 형식 오류 ({}번째)", attempt);
                 lastError = e;
             }
         }
@@ -102,7 +131,11 @@ public class OpenAiCompatibleStepParser implements StepParser {
                     .retrieve()
                     .body(ChatResponse.class);
         } catch (RestClientException e) {
-            log.warn("AI 서버 호출 실패: {}", e.getMessage());
+            if (e instanceof RestClientResponseException error) {
+                log.warn("AI 서버 호출 실패 (HTTP {})", error.getStatusCode().value());
+            } else {
+                log.warn("AI 서버 연결 또는 응답 읽기 실패");
+            }
             throw new StepParseException("AI 서버에 연결하지 못했어요. 잠시 뒤 다시 해 보세요.", e);
         }
 
@@ -144,6 +177,12 @@ public class OpenAiCompatibleStepParser implements StepParser {
     }
 
     record TextPart(String type, String text) {
+    }
+
+    record ImagePart(String type, @JsonProperty("image_url") ImageUrl imageUrl) {
+    }
+
+    record ImageUrl(String url) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

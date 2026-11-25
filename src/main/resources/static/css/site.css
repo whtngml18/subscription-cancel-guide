@@ -255,6 +255,59 @@ textarea {
     border-width: 2px;
 }
 
+.screenshot-help {
+    margin: 6px 0 10px;
+    padding-left: 1.25rem;
+    color: var(--muted);
+    font-size: .875rem;
+}
+
+.screenshot-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 12px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.screenshot-list[hidden] { display: none; }
+
+.screenshot-list li,
+.screenshot-list li a {
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+}
+
+.screenshot-list img,
+.screenshot-comparison img {
+    display: block;
+    width: 76px;
+    height: 100px;
+    object-fit: contain;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg-soft);
+}
+
+.step.review-step { grid-template-columns: 32px minmax(0, 1fr); }
+
+.screenshot-comparison {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.screenshot-comparison .mini-phone { margin: 0; }
+.screenshot-comparison img { width: 120px; height: auto; max-height: 240px; }
+
+@media (max-width: 480px) {
+    .screenshot-comparison { flex-direction: column; }
+}
+
 /* 제보 화면 글쓰기 안내 */
 .write-guide {
     margin: 0 0 10px;

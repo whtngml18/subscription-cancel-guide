@@ -2,6 +2,8 @@ package com.whtngml.subscription_cancel_guide.controller;
 
 import com.whtngml.subscription_cancel_guide.domain.IconImage;
 import com.whtngml.subscription_cancel_guide.domain.Submission;
+import com.whtngml.subscription_cancel_guide.domain.SubmissionScreenshot;
+import com.whtngml.subscription_cancel_guide.dto.AiStep;
 import com.whtngml.subscription_cancel_guide.service.IconService;
 import com.whtngml.subscription_cancel_guide.service.IconValidationException;
 import com.whtngml.subscription_cancel_guide.dto.SubscriptionForm;
@@ -14,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -66,6 +71,15 @@ public class AdminSubmissionController {
         form.setVerifiedAt(LocalDate.now());
         model.addAttribute("form", form);
         return showDetail(submission, model);
+    }
+
+    @GetMapping("/{id}/screenshots/{order}")
+    public ResponseEntity<byte[]> screenshot(@PathVariable Long id, @PathVariable int order) {
+        byte[] jpeg = submissionService.getScreenshot(id, order);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .contentType(MediaType.parseMediaType(SubmissionScreenshot.CONTENT_TYPE))
+                .body(jpeg);
     }
 
     // ---------- 승인 ----------
@@ -129,7 +143,10 @@ public class AdminSubmissionController {
 
     private String showDetail(Submission submission, Model model) {
         model.addAttribute("submission", submission);
-        model.addAttribute("aiSteps", submissionService.getAiSteps(submission));
+        var reviewSteps = submissionService.getReviewSteps(submission);
+        model.addAttribute("reviewSteps", reviewSteps);
+        model.addAttribute("aiSteps", reviewSteps.stream().map(AiStep::toForm).toList());
+        model.addAttribute("screenshotOrders", submissionService.getScreenshotOrders(submission.getId()));
         model.addAttribute("sameName", submissionService.findSameNameSubscription(submission).orElse(null));
         model.addAttribute("categories", categoryRepository.findAll(Sort.by("id")));
         return "admin/submission";
