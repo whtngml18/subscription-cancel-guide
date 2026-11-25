@@ -23,13 +23,35 @@
 
         <div class="field">
             <label for="rawText">해지 방법</label>
+            <!-- 위치 표현은 AI 지시문(StepPrompt)의 위치 표와 같은 말을 쓴다 -->
+            <div class="write-guide" id="writeGuide">
+                <p class="write-guide-title">이렇게 적어 주시면 그림이 정확해져요</p>
+                <ol>
+                    <li>누른 순서대로 적어 주세요. 한 줄에 한 번 누른 것이면 더 좋아요.</li>
+                    <li>버튼이 화면 어디쯤 있었는지 적어 주세요. (오른쪽 위, 왼쪽 위, 가운데, 아래쪽)</li>
+                    <li>메뉴·버튼 이름은 화면에 보인 그대로 적어 주세요.</li>
+                    <li>앱인지 웹사이트인지 알려 주세요.</li>
+                </ol>
+                <div class="write-examples">
+                    <div class="write-example write-example-good">
+                        <p class="write-example-label">👍 좋은 예</p>
+                        <p>앱에서 오른쪽 위 프로필 사진을 눌러요.<br>아래쪽 '계정'을 눌러요.<br>'멤버십 해지' 빨간 버튼을 누르고 '해지 완료'를 눌러요.</p>
+                    </div>
+                    <div class="write-example write-example-bad">
+                        <p class="write-example-label">👎 아쉬운 예</p>
+                        <p>설정에서 해지하면 돼요.</p>
+                    </div>
+                </div>
+                <button type="button" id="fillTemplate" class="btn btn-secondary btn-sm" hidden>예시 넣어 보기</button>
+            </div>
             <textarea id="rawText" th:field="*{rawText}" rows="8" maxlength="1000"
-                      placeholder="예: 앱 오른쪽 위 프로필을 누르고, 구매 및 멤버십에서 멤버십 해지를 눌러요."
+                      placeholder="예: 앱에서 오른쪽 위 프로필 사진을 눌러요. 아래쪽 '계정'을 눌러요. '멤버십 해지'를 누르고 '해지 완료'를 눌러요."
                       th:attr="aria-invalid=${#fields.hasErrors('rawText')} ? 'true' : null,
                                aria-describedby=${#fields.hasErrors('rawText')} ? 'rawText-error rawText-help' : 'rawText-help'"></textarea>
             <p class="field-error" id="rawText-error"
                th:if="${#fields.hasErrors('rawText')}" th:errors="*{rawText}">오류</p>
             <p class="field-help" id="rawText-help">10자 이상 1000자 이하로 적어 주세요.</p>
+            <p class="field-help" id="rawTextCount" aria-live="polite"></p>
         </div>
 
         <details class="more" th:open="${#fields.hasErrors('channels') or #fields.hasErrors('caution') or #fields.hasErrors('iconFile')}">
@@ -88,6 +110,8 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: siteFooter}"></footer>
+
+<script th:src="@{/js/submit-guide.js}" defer></script>
 
 <script th:if="${aiSteps != null}">
     // 미리보기 뒤에 글을 고치면 AI 단계가 글과 달라지므로 버린다

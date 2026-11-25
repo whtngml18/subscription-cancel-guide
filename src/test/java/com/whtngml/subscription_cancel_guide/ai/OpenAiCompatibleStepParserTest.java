@@ -24,24 +24,24 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-class FactchatStepParserTest {
+class OpenAiCompatibleStepParserTest {
 
-    private static final String URL = "https://ai.test/v1/gateway/chat/completions/";
+    private static final String URL = "https://ai.test/v1beta/openai/chat/completions";
     private static final String GOOD = """
             {"service":"넷플릭스","steps":[{"order":1,"screen":"홈","target":"프로필","position":"top-right"}]}""";
     private static final String TEXT = "홈에서 오른쪽 위 프로필을 눌러요.";
 
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
     private MockRestServiceServer server;
-    private FactchatStepParser parser;
+    private OpenAiCompatibleStepParser parser;
 
     @BeforeEach
     void setUp() {
         RestClient.Builder builder = RestClient.builder()
-                .baseUrl("https://ai.test/v1/gateway")
+                .baseUrl("https://ai.test/v1beta/openai")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer test-key");
         server = MockRestServiceServer.bindTo(builder).build();
-        parser = new FactchatStepParser(builder.build(), new AiStepsJson(jsonMapper), "test-key", "test-model");
+        parser = new OpenAiCompatibleStepParser(builder.build(), new AiStepsJson(jsonMapper), "test-key", "test-model", false);
     }
 
     // OpenAI 호환 응답 본문을 만든다
@@ -59,7 +59,8 @@ class FactchatStepParserTest {
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer test-key"))
                 .andExpect(jsonPath("$.model").value("test-model"))
-                .andExpect(jsonPath("$.messages[1].content").value(containsString("넷플릭스")))
+                .andExpect(jsonPath("$.messages[1].content[0].type").value("text"))
+                .andExpect(jsonPath("$.messages[1].content[0].text").value(containsString("넷플릭스")))
                 .andRespond(withSuccess(chatResponse("```json\n" + GOOD + "\n```"), MediaType.APPLICATION_JSON));
 
         AiStepsResult result = parser.parse("넷플릭스", TEXT);
@@ -102,9 +103,40 @@ class FactchatStepParserTest {
 
     @Test
     void 키가_없으면_쓸_수_없다() {
-        FactchatStepParser noKey = new FactchatStepParser(RestClient.create(), new AiStepsJson(jsonMapper), "", "test-model");
+        OpenAiCompatibleStepParser noKey = new OpenAiCompatibleStepParser(RestClient.create(), new AiStepsJson(jsonMapper), "", "test-model", false);
 
         assertThat(noKey.isAvailable()).isFalse();
         assertThatThrownBy(() -> noKey.parse("넷플릭스", TEXT)).isInstanceOf(StepParseException.class);
+    }
+
+    @Test
+    void 학교_게이트웨이는_끝에_슬래시() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://ai.test/v1/gateway");
+        MockRestServiceServer slashServer = MockRestServiceServer.bindTo(builder).build();
+        OpenAiCompatibleStepParser slash = new OpenAiCompatibleStepParser(
+                builder.build(), new AiStepsJson(jsonMapper), "test-key", "test-model", true);
+        slashServer.expect(once(), requestTo("https://ai.test/v1/gateway/chat/completions/"))
+                .andRespond(withSuccess(chatResponse(GOOD), MediaType.APPLICATION_JSON));
+
+        assertThat(slash.parse("넷플릭스", TEXT).steps()).hasSize(1);
+        slashServer.verify();
+    }
+
+    @Test
+    void 생각_토큰까지_고려해_출력_한도를_넉넉히() {
+        server.expect(once(), requestTo(URL))
+                .andExpect(jsonPath("$.max_tokens").value(8000))
+                .andRespond(withSuccess(chatResponse(GOOD), MediaType.APPLICATION_JSON));
+
+        parser.parse("넷플릭스", TEXT);
+        server.verify();
+    }
+
+    @Test
+    void 앞뒤_설명이_붙은_답도_읽는다() {
+        assertThat(OpenAiCompatibleStepParser.stripCodeFence("여기 결과예요:\n```json\n" + GOOD + "\n```\n도움이 되길!"))
+                .isEqualTo(GOOD);
+        assertThat(OpenAiCompatibleStepParser.stripCodeFence("결과: " + GOOD + " 이에요."))
+                .isEqualTo(GOOD);
     }
 }

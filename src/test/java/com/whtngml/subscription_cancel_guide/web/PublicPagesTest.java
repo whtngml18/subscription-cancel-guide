@@ -266,4 +266,31 @@ class PublicPagesTest {
         mvc.perform(get("/category/etc"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void submitShowsWriteGuide() throws Exception {
+        mvc.perform(get("/submit"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("이렇게 적어 주시면 그림이 정확해져요")))
+                .andExpect(content().string(containsString("설정에서 해지하면 돼요.")))
+                .andExpect(content().string(containsString("id=\"fillTemplate\"")))
+                .andExpect(content().string(containsString("/js/submit-guide.js")));
+    }
+
+    @Test
+    void rejectsTemplateLeft() throws Exception {
+        long before = submissionRepository.count();
+        mvc.perform(post("/submit").param("serviceName", "왓챠")
+                        .param("rawText", "앱 / 웹:\n1. (어디쯤) '(버튼 이름)'을 눌러요.").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("괄호 안을 실제 내용으로 바꿔 주세요.")));
+        assertEquals(before, submissionRepository.count());
+    }
+
+    @Test
+    void allowsNormalParentheses() throws Exception {
+        mvc.perform(post("/submit").param("serviceName", "왓챠")
+                        .param("rawText", "앱(아이폰)에서 오른쪽 위 프로필을 눌러요.").with(csrf()))
+                .andExpect(status().is3xxRedirection());
+    }
 }

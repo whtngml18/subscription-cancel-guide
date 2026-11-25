@@ -35,9 +35,10 @@ spring:
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
 
-  # 제보 글을 단계로 나누는 AI (학교 factchat API Gateway, OpenAI 호환). 키는 저장소에 넣지 않고 환경변수 FACTCHAT_API_KEY로 넣는다.
-  # 키가 없으면 앱은 그대로 켜지고 AI 미리보기 버튼만 숨긴다.
+  # 제보 글을 단계로 나누는 AI (OpenAI 호환 주소: 기본 Google Gemini). 키는 저장소에 넣지 않고 환경변수로 넣는다.
+  # 키가 없으면 앱은 그대로 켜지고 AI 미리보기 버튼만 숨긴다. 학교 factchat으로 돌아갈 때는 AI_BASE_URL, AI_MODEL, AI_TRAILING_SLASH=true.
   ai:
-    base-url: ${AI_BASE_URL:https://factchat-cloud.mindlogic.ai/v1/gateway}
-    api-key: ${FACTCHAT_API_KEY:}
-    model: ${AI_MODEL:claude-haiku-4-5-20251001}
+    base-url: ${AI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/openai}
+    api-key: ${AI_API_KEY:${GEMINI_API_KEY:${FACTCHAT_API_KEY:}}}
+    model: ${AI_MODEL:gemini-3.5-flash-lite}
+    trailing-slash: ${AI_TRAILING_SLASH:false}
