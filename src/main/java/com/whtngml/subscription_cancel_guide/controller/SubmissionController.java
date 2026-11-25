@@ -10,6 +10,8 @@ import com.whtngml.subscription_cancel_guide.dto.AiStepsResult;
 import com.whtngml.subscription_cancel_guide.dto.SubmissionForm;
 import com.whtngml.subscription_cancel_guide.service.IconService;
 import com.whtngml.subscription_cancel_guide.service.IconValidationException;
+import com.whtngml.subscription_cancel_guide.service.ScreenshotValidationException;
+import com.whtngml.subscription_cancel_guide.service.SubmissionScreenshotProcessor;
 import com.whtngml.subscription_cancel_guide.service.SubmissionService;
 import com.whtngml.subscription_cancel_guide.service.SubmitRateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +26,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
+import static org.springframework.util.StringUtils.hasText;
+
 @Controller
 @RequestMapping("/submit")
 @RequiredArgsConstructor
@@ -35,10 +41,16 @@ public class SubmissionController {
     private final AiPreviewRateLimiter rateLimiter;
     private final IconService iconService;
     private final SubmitRateLimiter submitRateLimiter;
+    private final SubmissionScreenshotProcessor screenshotProcessor;
 
     @ModelAttribute("aiAvailable")
     public boolean aiAvailable() {
         return stepParser.isAvailable();
+    }
+
+    @ModelAttribute("aiProviderName")
+    public String aiProviderName() {
+        return stepParser.providerName();
     }
 
     // 검색 결과가 없을 때 /submit?name=검색어 로 들어오면 서비스 이름을 미리 채운다
@@ -55,6 +67,13 @@ public class SubmissionController {
     public String preview(@Valid @ModelAttribute("form") SubmissionForm form, BindingResult bindingResult,
                           HttpServletRequest request, Model model) {
         form.setAiStepsJson(null);
+        boolean retainsFiles = "true".equals(request.getHeader("X-Submission-Preview"));
+        if (!retainsFiles) {
+            markReselect(form, model);
+            if (form.getIconFile() != null && !form.getIconFile().isEmpty()) {
+                model.addAttribute("reselectIcon", true);
+            }
+        }
         checkTemplate(form, bindingResult);
         if (bindingResult.hasErrors()) {
             return "submit";
@@ -68,9 +87,19 @@ public class SubmissionController {
             return "submit";
         }
 
+        List<byte[]> screenshots = processScreenshots(form, bindingResult);
+        if (bindingResult.hasErrors()) {
+            return "submit";
+        }
+
         try {
-            AiStepsResult result = stepParser.parse(form.getServiceName().strip(), form.getRawText().strip());
-            form.setAiStepsJson(aiStepsJson.write(result));
+            String serviceName = form.getServiceName().strip();
+            String rawText = form.getRawText().strip();
+            AiStepsResult result = screenshots.isEmpty() ? stepParser.parse(serviceName, rawText)
+                    : stepParser.parse(serviceName, rawText, screenshots);
+            if (screenshots.isEmpty() || retainsFiles) {
+                form.setAiStepsJson(aiStepsJson.write(result));
+            }
             model.addAttribute("aiSteps", result.steps().stream().map(AiStep::toForm).toList());
         } catch (StepParseException e) {
             model.addAttribute("aiError", e.getMessage());
@@ -81,12 +110,14 @@ public class SubmissionController {
     @PostMapping
     public String submit(@Valid @ModelAttribute("form") SubmissionForm form, BindingResult bindingResult,
                          HttpServletRequest request, Model model) {
+        markReselect(form, model);
         checkTemplate(form, bindingResult);
         if (!bindingResult.hasErrors() && !submitRateLimiter.tryAcquire(request.getRemoteAddr())) {
             form.setAiStepsJson(null);
             model.addAttribute("aiError", "제보는 1시간에 10번까지 보낼 수 있어요. 잠시 뒤 다시 보내 주세요.");
             return "submit";
         }
+        List<byte[]> screenshots = bindingResult.hasErrors() ? List.of() : processScreenshots(form, bindingResult);
         IconImage icon = null;
         if (!bindingResult.hasErrors()) {
             try {
@@ -100,13 +131,28 @@ public class SubmissionController {
             return "submit";
         }
 
-        submissionService.submit(form, icon);
+        submissionService.submit(form, icon, screenshots);
         return "redirect:/submit/done";
     }
 
     @GetMapping("/done")
     public String done() {
         return "submit-done";
+    }
+
+    private List<byte[]> processScreenshots(SubmissionForm form, BindingResult bindingResult) {
+        try {
+            return screenshotProcessor.process(form.getScreenshots());
+        } catch (ScreenshotValidationException e) {
+            bindingResult.rejectValue("screenshots", "screenshot", e.getMessage());
+            return List.of();
+        }
+    }
+
+    private void markReselect(SubmissionForm form, Model model) {
+        if (form.getScreenshots().stream().anyMatch(file -> !file.isEmpty() || hasText(file.getOriginalFilename()))) {
+            model.addAttribute("reselectScreenshots", true);
+        }
     }
 
     private void checkTemplate(SubmissionForm form, BindingResult bindingResult) {
