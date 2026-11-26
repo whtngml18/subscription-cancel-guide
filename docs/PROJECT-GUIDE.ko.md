@@ -194,10 +194,12 @@ subscription-cancel-guide/
 
 ### 로컬 실행
 
-PowerShell에서 저장소 폴더로 이동합니다. 로컬 기본 설정은 H2를 사용하며 기본 주소는 `http://localhost:8080`입니다.
+PowerShell에서 저장소 폴더로 이동합니다. 로컬 기본 설정은 H2를 사용하며 기본 주소는 `http://localhost:8080`입니다. 로컬과 운영 모두 관리자 비밀번호를 `ADMIN_PASSWORD` 환경변수로 전달해야 합니다. 저장소에는 기본 비밀번호가 없습니다.
 
 ```powershell
 cd C:\Users\whtng\subscription-cancel-guide
+$secure = Read-Host '로컬 관리자 비밀번호' -AsSecureString
+$env:ADMIN_PASSWORD = [pscredential]::new('admin', $secure).GetNetworkCredential().Password
 .\gradlew.bat bootRun
 ```
 
@@ -215,7 +217,7 @@ AI 미리보기는 사용자 환경변수 `GEMINI_API_KEY` 또는 `AI_API_KEY` �
 
 | 변수 | 용도 | 주의 |
 |---|---|---|
-| `ADMIN_PASSWORD` | 운영 관리자 비밀번호 | 운영 설정에는 기본값이 없으며 배포 환경에서 설정 |
+| `ADMIN_PASSWORD` | 관리자 로그인 비밀번호 | 로컬에서는 실행 전에 입력하고, 운영에서는 배포 환경변수로 설정. 기본값 없음 |
 | `AI_API_KEY` 또는 `GEMINI_API_KEY` | AI 단계 미리보기 API 인증 | 값을 저장소·문서·채팅에 기록하지 않음 |
 | `AI_BASE_URL` | OpenAI 호환 API 주소 | 기본값은 Gemini 호환 주소 |
 | `AI_MODEL` | 사용할 모델 | 기본값 `gemini-3.5-flash-lite` |
