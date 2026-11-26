@@ -17,7 +17,9 @@ Java 21 · Spring Boot · Thymeleaf · Spring Data JPA · Spring Security · H2(
 Windows PowerShell에서 저장소 폴더로 이동한 뒤 실행합니다.
 
 ```powershell
+$secure = Read-Host '로컬 관리자 비밀번호' -AsSecureString
+$env:ADMIN_PASSWORD = [pscredential]::new('admin', $secure).GetNetworkCredential().Password
 .\gradlew.bat bootRun
 ```
 
-기본 로컬 주소는 `http://localhost:8080`입니다. 자세한 환경변수와 검증 명령은 [프로젝트 기획서](docs/PROJECT-GUIDE.ko.md#10-windows에서-실행하고-검증하기)를 참고하세요.
+기본 로컬 주소는 `http://localhost:8080`입니다. 관리자 비밀번호는 실행할 때 입력하며 저장소에 기본값이 없습니다. 자세한 환경변수와 검증 명령은 [프로젝트 기획서](docs/PROJECT-GUIDE.ko.md#10-windows에서-실행하고-검증하기)를 참고하세요.
