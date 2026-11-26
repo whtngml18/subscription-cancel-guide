@@ -23,3 +23,9 @@ $env:ADMIN_PASSWORD = [pscredential]::new('admin', $secure).GetNetworkCredential
 ```
 
 기본 로컬 주소는 `http://localhost:8080`입니다. 관리자 비밀번호는 실행할 때 입력하며 저장소에 기본값이 없습니다. 자세한 환경변수와 검증 명령은 [프로젝트 기획서](docs/PROJECT-GUIDE.ko.md#10-windows에서-실행하고-검증하기)를 참고하세요.
+
+## 관리자 계정
+
+- 로그인 주소: `/admin/login`
+- 계정 이름: `admin`
+- 비밀번호: 실행·배포 환경의 `ADMIN_PASSWORD` 변수로 설정합니다. 비밀번호 값은 README나 Git 저장소에 기록하지 않습니다.
